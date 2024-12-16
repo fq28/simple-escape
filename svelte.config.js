@@ -3,18 +3,16 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	// Consult https://svelte.dev/docs/kit/integrations
-	// for more information about preprocessors
-	preprocess: vitePreprocess(),
+    preprocess: vitePreprocess(),
 
-	kit: {
+    kit: {
         adapter: adapter({
-            fallback: 'index.html', // Needed for SPAs
+            fallback: 'index.html', // For SPA routing
         }),
         paths: {
-            base: '', // Use this if deploying to a custom subfolder
-        }
-    }
+            base: '/simple-escape', // Update to match your repo name
+        },
+    },
 };
 
 export default config;
