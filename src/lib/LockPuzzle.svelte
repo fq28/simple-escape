@@ -11,33 +11,44 @@
 
   let inputRef;
 
+  // Sound Effects
+  const suspenseSound = new Audio('/simple-escape/sounds/add.wav');
+  const errorSound = new Audio('/simple-escape/sounds/error.wav');
+  const successSound = new Audio('/simple-escape/sounds/success.wav');
+
   function validateCode() {
     if (!inputCode.trim()) {
-      inputRef.focus(); // Refocus input
+      inputRef.focus();
       return;
     }
 
+    // Play suspense sound
+    suspenseSound.currentTime = 0;
+    suspenseSound.play();
+
     isLoading = true;
 
-    // Fake suspense delay
     setTimeout(async () => {
+      suspenseSound.pause();
       isLoading = false;
 
       if (inputCode === code) {
         isUnlocked = true;
+        successSound.play();
         launchConfetti();
       } else {
-        triggerShake(); // Shake only if incorrect
-        inputCode = ''; // Clear input
+        errorSound.play();
+        triggerShake();
+        inputCode = '';
         await tick();
-        inputRef.focus(); // Refocus input
+        inputRef.focus();
       }
-    }, 2000);
+    }, Math.floor(Math.random() * 1500) + 1500);
   }
 
   function triggerShake() {
     isShaking = true;
-    setTimeout(() => (isShaking = false), 600); // Extended duration
+    setTimeout(() => (isShaking = false), 600);
   }
 
   function launchConfetti() {
@@ -92,6 +103,7 @@
     <!-- Submit Button -->
     <button
       on:click={validateCode}
+      disabled={isLoading}
       class="mt-6 px-8 py-4 text-2xl font-bold text-white rounded-full 
         bg-gradient-to-r from-indigo-600 to-purple-500 hover:from-purple-500 hover:to-indigo-600 
         shadow-lg hover:shadow-indigo-500/50 transition-transform transform hover:scale-105
