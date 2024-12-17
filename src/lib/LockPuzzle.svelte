@@ -60,7 +60,7 @@
   {#if !isUnlocked}
     <!-- Padlock -->
     <div class="relative">
-      <div class="text-7xl mb-6 animate-pulse">🔒</div>
+      <div class="text-8xl mb-8 animate-pulse">🔒</div>
       {#if isLoading}
         <!-- Intense Loading Animation -->
         <div class="absolute inset-0 flex items-center justify-center">
@@ -83,7 +83,7 @@
     autofocus
     disabled={isLoading}
     on:keydown={handleKeydown}
-    class="w-32 p-3 text-4xl font-mono tracking-widest text-center bg-gray-800 text-indigo-300 
+    class="w-40 p-3 text-5xl font-mono tracking-widest text-center bg-gray-800 text-indigo-300 
       border-4 border-gray-700 rounded-lg focus:outline-none focus:border-indigo-400 
       focus:ring-4 focus:ring-indigo-500/70 transition-all duration-300 ease-in-out 
       shadow-lg hover:shadow-indigo-400/40 {isShaking ? 'animate-shake' : 'animate-input-focus'} "
@@ -92,7 +92,7 @@
     <!-- Submit Button -->
     <button
       on:click={validateCode}
-      class="mt-6 px-6 py-2 text-lg font-bold text-white rounded-full 
+      class="mt-6 px-8 py-4 text-2xl font-bold text-white rounded-full 
         bg-gradient-to-r from-indigo-600 to-purple-500 hover:from-purple-500 hover:to-indigo-600 
         shadow-lg hover:shadow-indigo-500/50 transition-transform transform hover:scale-105
         active:scale-95 focus:outline-none animate-glow"
