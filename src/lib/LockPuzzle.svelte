@@ -1,6 +1,8 @@
 <script>
   import { tick } from 'svelte';
   import confetti from 'canvas-confetti';
+  import { browser } from '$app/environment'; // Import browser environment check
+
   export let code;
   export let answer;
 
@@ -12,10 +14,15 @@
   let inputRef;
 
   // Sound Effects
-  const suspenseSound = new Audio('/simple-escape/sounds/add.wav');
-  const errorSound = new Audio('/simple-escape/sounds/error.wav');
-  const successSound = new Audio('/simple-escape/sounds/success.wav');
+  // Initialize Audio only if browser
+  let suspenseSound, successSound, errorSound;
+  if (browser) {
+    suspenseSound = new Audio('/simple-escape/sounds/add.wav');
+    errorSound = new Audio('/simple-escape/sounds/error.wav');
+    successSound = new Audio('/simple-escape/sounds/success.wav');
+  }
 
+  // validate the code
   function validateCode() {
     if (!inputCode.trim()) {
       inputRef.focus();
@@ -23,21 +30,23 @@
     }
 
     // Play suspense sound
-    suspenseSound.currentTime = 0;
-    suspenseSound.play();
+    if (browser) {
+      suspenseSound.currentTime = 0;
+      suspenseSound.play();
+    }
 
     isLoading = true;
 
     setTimeout(async () => {
-      suspenseSound.pause();
+      if (browser) suspenseSound.pause();
       isLoading = false;
 
       if (inputCode === code) {
         isUnlocked = true;
-        successSound.play();
+        if (browser) successSound.play();
         launchConfetti();
       } else {
-        errorSound.play();
+        if (browser) errorSound.play(); 
         triggerShake();
         inputCode = '';
         await tick();
@@ -67,7 +76,7 @@
 </script>
 
 
-<div class="flex flex-col items-center justify-center text-center h-screen bg-gray-900 text-white p-6 mb-10">
+<div class="flex flex-col items-center justify-center text-center h-screen text-white p-6 mb-10">
   {#if !isUnlocked}
     <!-- Padlock -->
     <div class="relative">
