@@ -6,15 +6,15 @@
   
   <a
     href={href}
-    class="relative flex flex-col items-center justify-center h-40 p-4 bg-white text-gray-800 
+    class="relative flex flex-col items-center justify-center h-60 p-4 bg-white text-gray-800 
       rounded-xl shadow-md cursor-pointer transform transition duration-300 
       hover:scale-105 hover:shadow-2xl hover:glimmer"
   >
     <!-- Emoji Icon -->
-    <div class="text-6xl mb-2 drop-shadow-md">{emoji}</div>
+    <div class="text-7xl mb-2 drop-shadow-md">{emoji}</div>
   
     <!-- Puzzle Name -->
-    <div class="text-2xl font-bold">{name}</div>
+    <div class="text-3xl font-bold">{name}</div>
   
     <!-- Gleam Effect -->
     <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent 
