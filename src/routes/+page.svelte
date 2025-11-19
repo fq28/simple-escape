@@ -254,6 +254,16 @@
           {/if}
         </button>
       </div>
+  <h1 class="text-5xl font-bold mb-12 animate-fade-in">ONTSNAP als je kunt!</h1>
+
+  <!-- Puzzle Cards Grid -->
+  <div class="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full max-w-7xl">
+    {#each puzzles as puzzle}
+      <PuzzleCard 
+        name={puzzle.name}
+        emoji={emojiMap[puzzle.name]}
+        href={puzzle.slug}
+      />
     {/each}
   </section>
   {/if}
