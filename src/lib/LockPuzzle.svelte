@@ -17,9 +17,9 @@
   // Initialize Audio only if browser
   let suspenseSound, successSound, errorSound;
   if (browser) {
-    suspenseSound = new Audio('/simple-escape/sounds/add.wav');
-    errorSound = new Audio('/simple-escape/sounds/error.wav');
-    successSound = new Audio('/simple-escape/sounds/success.wav');
+    suspenseSound = new Audio('/sounds/add.wav');
+    errorSound = new Audio('/sounds/error.wav');
+    successSound = new Audio('/sounds/success.wav');
   }
 
   // validate the code

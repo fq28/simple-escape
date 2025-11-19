@@ -24,7 +24,7 @@
       <PuzzleCard 
         name={puzzle.name}
         emoji={emojiMap[puzzle.name]}
-        href={"/simple-escape/" + puzzle.slug}
+        href={puzzle.slug}
       />
     {/each}
   </div>
