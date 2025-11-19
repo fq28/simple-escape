@@ -2,6 +2,7 @@
   import { tick } from 'svelte';
   import confetti from 'canvas-confetti';
   import { browser } from '$app/environment'; // Import browser environment check
+  import { base } from '$app/paths';  
 
   export let code;
   export let answer;
@@ -17,9 +18,11 @@
   // Initialize Audio only if browser
   let suspenseSound, successSound, errorSound;
   if (browser) {
-    suspenseSound = new Audio('/sounds/add.wav');
-    errorSound = new Audio('/sounds/error.wav');
-    successSound = new Audio('/sounds/success.wav');
+    const prefix = base || ''; // base is '' locally, '/simple-escape' on GH Pages
+
+    suspenseSound = new Audio(`${prefix}/sounds/add.wav`);
+    errorSound    = new Audio(`${prefix}/sounds/error.wav`);
+    successSound  = new Audio(`${prefix}/sounds/success.wav`);
   }
 
   // validate the code
