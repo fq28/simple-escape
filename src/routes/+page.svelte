@@ -85,15 +85,6 @@
     errorSound.play();
   }
 
-  function launchConfettiSmall() {
-    if (!browser) return;
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
-  }
-
   function launchConfettiGrand() {
     if (!browser) return;
     confetti({
@@ -144,7 +135,6 @@
         lockStates = [...lockStates];
 
         playSuccess();
-        //launchConfettiSmall();
 
         if (lockStates.every((l) => l.isUnlocked)) {
           // Slight delay so they see the last lock open, then GRAND BOOM
@@ -174,7 +164,7 @@
 <main class="flex flex-col items-center min-h-screen bg-gray-900 text-white p-6">
   <!-- Title -->
   <h1 class="text-5xl font-bold mb-4 text-center animate-fade-in">
-    ASCII & Unicode Puzzel
+    ASCII &amp; Unicode Puzzel
   </h1>
   <p class="text-2xl mb-10 text-center max-w-2xl text-indigo-200">
     Los alle drie de sloten op.  
@@ -183,89 +173,78 @@
 
   <!-- Locks grid -->
   {#if !allUnlocked}
+    <section class="grid gap-8 w-full max-w-5xl grid-cols-1 md:grid-cols-3">
+      {#each locks as lock, i}
+        <div
+          class="relative flex flex-col items-center justify-between bg-gray-800 rounded-2xl shadow-xl p-6
+                 border border-gray-700 hover:border-indigo-400 transition-all duration-300
+                 {lockStates[i].isUnlocked ? 'ring-2 ring-emerald-400/80' : ''}"
+        >
+          <!-- Lock icon + loading overlay -->
+          <div class="relative mb-4 flex flex-col items-center">
+            <div class="text-6xl mb-2 animate-pulse">
+              {#if lockStates[i].isUnlocked}
+                🔓
+              {:else}
+                🔒
+              {/if}
+            </div>
 
-  <section class="grid gap-8 w-full max-w-5xl grid-cols-1 md:grid-cols-3">
-    {#each locks as lock, i}
-      <div
-        class="relative flex flex-col items-center justify-between bg-gray-800 rounded-2xl shadow-xl p-6
-               border border-gray-700 hover:border-indigo-400 transition-all duration-300
-               {lockStates[i].isUnlocked ? 'ring-2 ring-emerald-400/80' : ''}"
-      >
-        <!-- Lock icon + loading overlay -->
-        <div class="relative mb-4 flex flex-col items-center">
-          <div class="text-6xl mb-2 animate-pulse">
-            {#if lockStates[i].isUnlocked}
-              🔓
-            {:else}
-              🔒
+            {#if lockStates[i].isLoading}
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="flex space-x-2 animate-fade-in">
+                  <div class="w-3 h-3 bg-indigo-500 rounded-full animate-bounce delay-0"></div>
+                  <div class="w-3 h-3 bg-indigo-400 rounded-full animate-bounce delay-150"></div>
+                  <div class="w-3 h-3 bg-indigo-300 rounded-full animate-bounce delay-300"></div>
+                </div>
+              </div>
             {/if}
           </div>
 
-          {#if lockStates[i].isLoading}
-            <div class="absolute inset-0 flex items-center justify-center">
-              <div class="flex space-x-2 animate-fade-in">
-                <div class="w-3 h-3 bg-indigo-500 rounded-full animate-bounce delay-0"></div>
-                <div class="w-3 h-3 bg-indigo-400 rounded-full animate-bounce delay-150"></div>
-                <div class="w-3 h-3 bg-indigo-300 rounded-full animate-bounce delay-300"></div>
-              </div>
-            </div>
-          {/if}
+          <!-- Title & description -->
+          <h2 class="text-3xl font-bold mb-2 text-center">{lock.title}</h2>
+          <p class="text-lg mb-4 text-center text-indigo-200">
+            {lock.description}
+          </p>
+
+          <!-- Input -->
+          <input
+            type="text"
+            bind:value={lockStates[i].input}
+            bind:this={inputRefs[i]}
+            placeholder={lock.placeholder}
+            disabled={lockStates[i].isLoading || lockStates[i].isUnlocked}
+            on:keydown={(e) => handleKeydown(i, e)}
+            class="w-full p-3 text-2xl md:text-xl font-mono text-center bg-gray-900 text-indigo-200 
+                   border-2 border-gray-700 rounded-lg focus:outline-none focus:border-indigo-400 
+                   focus:ring-4 focus:ring-indigo-500/70 transition-all duration-300 ease-in-out 
+                   shadow-lg hover:shadow-indigo-400/40
+                   {lockStates[i].isShaking ? 'animate-shake' : 'animate-input-focus'}"
+          />
+
+          <!-- Button -->
+          <button
+            on:click={() => validateLock(i)}
+            disabled={lockStates[i].isLoading || lockStates[i].isUnlocked}
+            class="mt-4 px-5 py-3 text-xl font-bold text-white rounded-full 
+                   bg-gradient-to-r from-indigo-600 to-purple-500 
+                   hover:from-purple-500 hover:to-indigo-600 
+                   shadow-lg hover:shadow-indigo-500/50 
+                   transition-transform transform hover:scale-105
+                   active:scale-95 focus:outline-none animate-glow
+                   disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {#if lockStates[i].isUnlocked}
+              ✅ Geopend
+            {:else if lockStates[i].isLoading}
+              ⏳ Controleren...
+            {:else}
+              🚀 Open slot
+            {/if}
+          </button>
         </div>
-
-        <!-- Title & description -->
-        <h2 class="text-3xl font-bold mb-2 text-center">{lock.title}</h2>
-        <p class="text-lg mb-4 text-center text-indigo-200">
-          {lock.description}
-        </p>
-
-        <!-- Input -->
-        <input
-          type="text"
-          bind:value={lockStates[i].input}
-          bind:this={inputRefs[i]}
-          placeholder={lock.placeholder}
-          disabled={lockStates[i].isLoading || lockStates[i].isUnlocked}
-          on:keydown={(e) => handleKeydown(i, e)}
-          class="w-full p-3 text-2xl md:text-xl font-mono text-center bg-gray-900 text-indigo-200 
-                 border-2 border-gray-700 rounded-lg focus:outline-none focus:border-indigo-400 
-                 focus:ring-4 focus:ring-indigo-500/70 transition-all duration-300 ease-in-out 
-                 shadow-lg hover:shadow-indigo-400/40
-                 {lockStates[i].isShaking ? 'animate-shake' : 'animate-input-focus'}"
-        />
-
-        <!-- Button -->
-        <button
-          on:click={() => validateLock(i)}
-          disabled={lockStates[i].isLoading || lockStates[i].isUnlocked}
-          class="mt-4 px-5 py-3 text-xl font-bold text-white rounded-full 
-                 bg-gradient-to-r from-indigo-600 to-purple-500 
-                 hover:from-purple-500 hover:to-indigo-600 
-                 shadow-lg hover:shadow-indigo-500/50 
-                 transition-transform transform hover:scale-105
-                 active:scale-95 focus:outline-none animate-glow
-                 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {#if lockStates[i].isUnlocked}
-            ✅ Geopend
-          {:else if lockStates[i].isLoading}
-            ⏳ Controleren...
-          {:else}
-            🚀 Open slot
-          {/if}
-        </button>
-      </div>
-  <h1 class="text-5xl font-bold mb-12 animate-fade-in">ONTSNAP als je kunt!</h1>
-
-  <!-- Puzzle Cards Grid -->
-  <div class="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full max-w-7xl">
-    {#each puzzles as puzzle}
-      <PuzzleCard 
-        name={puzzle.name}
-        emoji={emojiMap[puzzle.name]}
-        href={puzzle.slug}
-      />
-    {/each}
-  </section>
+      {/each}
+    </section>
   {/if}
 
   <!-- Grand reward -->
@@ -286,8 +265,6 @@
 </main>
 
 <style>
-  /* Reuse animation styles from your original lock */
-
   @keyframes input-focus {
     0%, 100% {
       box-shadow: 0 0 10px rgba(99, 102, 241, 0.8);
