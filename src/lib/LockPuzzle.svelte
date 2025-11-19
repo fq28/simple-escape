@@ -18,6 +18,8 @@
   // Initialize Audio only if browser
   let suspenseSound, successSound, errorSound;
   if (browser) {
+    const prefix = base || ''; // base is '' locally, '/simple-escape' on GH Pages
+
     suspenseSound = new Audio(`${prefix}/sounds/add.wav`);
     errorSound    = new Audio(`${prefix}/sounds/error.wav`);
     successSound  = new Audio(`${prefix}/sounds/success.wav`);
