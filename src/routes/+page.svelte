@@ -10,22 +10,22 @@
       id: 1,
       title: 'Slot 1',
       description: 'De geheime ASCII boodschap',
-      code: 'Bit 7',          // expected answer (text)
-      placeholder: 'antwoord 1'
+      code: 'Bit 2',          // expected answer (text)
+      placeholder: 'tekst'
     },
     {
       id: 2,
       title: 'Slot 2',
       description: 'Rekenen met letters',
       code: 'D',          // expected answer (text)
-      placeholder: 'antwoord 2'
+      placeholder: 'letter'
     },
     {
       id: 3,
       title: 'Slot 3',
       description: 'Unicode: verborgen teken',
       code: '菐',    // expected answer (text)
-      placeholder: 'antwoord 3'
+      placeholder: 'symbool'
     }
   ];
 
@@ -252,12 +252,12 @@
     <section class="mt-12 text-center animate-fade-in-slow">
       <div class="text-7xl mb-4">🎉🎉🎉</div>
       <h2 class="text-4xl md:text-5xl font-bold text-emerald-300 mb-4">
-        Jullie hebben alle sloten gekraakt!
+        Je hebt alle sloten gekraakt!
       </h2>
       <p class="text-2xl md:text-3xl text-indigo-100 max-w-3xl mx-auto">
-        Hier komt jullie ultieme beloning te staan:<br />
+        De beloning (laatste puzzel): <br />
         <span class="font-semibold text-white">
-          bijvoorbeeld een geheime zin, link, of hint naar de volgende uitdaging.
+          54 4F 50 50 45 52
         </span>
       </p>
     </section>
