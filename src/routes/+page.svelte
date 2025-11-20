@@ -127,8 +127,8 @@
       stopSuspense();
       state.isLoading = false;
 
-      const expected = lock.code.trim().toLowerCase();
-      const actual = state.input.trim().toLowerCase();
+      const expected = lock.code.trim();
+      const actual = state.input.trim();
 
       if (actual === expected) {
         state.isUnlocked = true;
