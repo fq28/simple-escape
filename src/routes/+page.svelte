@@ -252,12 +252,12 @@
     <section class="mt-12 text-center animate-fade-in-slow">
       <div class="text-7xl mb-4">🎉🎉🎉</div>
       <h2 class="text-4xl md:text-5xl font-bold text-emerald-300 mb-4">
-        Jullie hebben alle sloten gekraakt!
+        Je hebt alle sloten gekraakt!
       </h2>
       <p class="text-2xl md:text-3xl text-indigo-100 max-w-3xl mx-auto">
-        Hier komt jullie ultieme beloning te staan:<br />
+        De beloning: <br />
         <span class="font-semibold text-white">
-          bijvoorbeeld een geheime zin, link, of hint naar de volgende uitdaging.
+          54 4F 50 50 45 52
         </span>
       </p>
     </section>
