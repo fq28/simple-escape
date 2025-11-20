@@ -255,7 +255,7 @@
         Je hebt alle sloten gekraakt!
       </h2>
       <p class="text-2xl md:text-3xl text-indigo-100 max-w-3xl mx-auto">
-        De beloning: <br />
+        De beloning (laatste puzzel): <br />
         <span class="font-semibold text-white">
           54 4F 50 50 45 52
         </span>
