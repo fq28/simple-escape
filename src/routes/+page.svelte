@@ -9,22 +9,22 @@
     {
       id: 1,
       title: 'Slot 1',
-      description: 'Geheime boodschap',
-      code: 'alfabet',          // expected answer (text)
+      description: 'De geheime ASCII boodschap',
+      code: 'Bit 7',          // expected answer (text)
       placeholder: 'antwoord 1'
     },
     {
       id: 2,
       title: 'Slot 2',
-      description: 'Bits',
-      code: 'stoelen',          // expected answer (text)
+      description: 'Rekenen met letters',
+      code: 'D',          // expected answer (text)
       placeholder: 'antwoord 2'
     },
     {
       id: 3,
       title: 'Slot 3',
-      description: 'Unicode',
-      code: 'paardensprong',    // expected answer (text)
+      description: 'Unicode: verborgen teken',
+      code: '菐',    // expected answer (text)
       placeholder: 'antwoord 3'
     }
   ];
