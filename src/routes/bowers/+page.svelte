@@ -40,7 +40,7 @@
   solution: '6744C0B5',
   active: true,
   rewardText:
-    'De kluis opent met de code 6744C0B5. Binnenin ligt een map met verouderde locatiegegevens, die wijzen op het feit dat Bowers niet als enige op de locatie aanwezig was. '
+    'De kluis opent met de code 6744C0B5. Binnenin ligt een map met verouderde locatiegegevens, die wijzen op het feit dat Bowers niet alleen was met het slachtoffer tijdens de moord. '
 },
 
 
