@@ -28,6 +28,23 @@
   // 👉 Configure your evidence cards here
   const evidenceItems: EvidenceItem[] = [
 {
+  id: 'hexcode',
+  emoji: '🔐',
+  title: 'Bewijsstuk 3: Hexadecimale Kluiscode',
+  subtitle: 'Forensische omzettingen tussen decimaal en hex',
+  description:
+    'In het politiedossier lag een oude kluis met acht waardes in gemengde notaties. Alleen door correcte omzetting van alle waardes kan de kluis worden geopend.',
+  prompt:
+    'Wat is de kluiscode die ontstaat wanneer je van elke door jou omgezette waarde het laatste teken achter elkaar zet?',
+  placeholder: '8 tekens',
+  solution: '6744C0B5',
+  active: true,
+  rewardText:
+    'De kluis opent met de code 6744C0B5. Binnenin ligt een map met verouderde locatiegegevens, die wijzen op het feit dat Bowers niet als enige op de locatie aanwezig was. '
+},
+
+
+{
   id: 'fingerprint',
   emoji: '🧬',
   title: 'Bewijsstuk 1: Vingerafdruk',
