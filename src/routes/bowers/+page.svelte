@@ -28,6 +28,22 @@
   // 👉 Configure your evidence cards here
   const evidenceItems: EvidenceItem[] = [
 {
+  id: 'rle-image',
+  emoji: '🗂️', // neutraal, geen hint
+  title: 'Bewijsstuk 4: Gecomprimeerd beeld',
+  subtitle: 'Lossless compressie (RLE)',
+  description: '',
+  prompt:
+    'Decodeer de RLE-gecodeerde afbeelding. Welke vorm verschijnt?',
+  placeholder: 'naam van de vorm',
+  solution: 'zandloper',
+  active: true,
+  rewardText:
+    'De afbeelding is zonder kwaliteitsverlies hersteld. Dit object had Bowers bij zicht op het moment van de moord. Wat moet hij met een zandloper?'
+},
+
+
+{
   id: 'hexcode',
   emoji: '🔐',
   title: 'Bewijsstuk 3: Hexadecimale Kluiscode',
