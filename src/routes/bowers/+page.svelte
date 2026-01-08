@@ -96,18 +96,6 @@
 
     // 👇 Voorbeeld “coming soon” kaarten
     {
-      id: 'image-compression',
-      emoji: '.',
-      title: 'Bewijsstuk 4',
-      subtitle: 'Binnenkort beschikbaar',
-      description:
-        'Een foto uit het dossier lijkt zwaar gecomprimeerd. Later onderzoek je of er details verloren zijn gegaan.',
-      prompt: '',
-      placeholder: '',
-      solution: '',
-      active: false
-    },
-    {
       id: 'file-formats',
       emoji: '.',
       title: 'Bewijsstuk 5',
