@@ -30,9 +30,9 @@ LEVELS: tuple[Level, ...] = (
     # Slightly harder: same method, different shift (+7).
     Level(source="vlieg-sol.txt", target="vlieg.txt", method="caesar", shift=7),
     # New method, still approachable.
-    Level(source="7maart-sol.txt", target="7maart.txt", method="atbash"),
+    Level(source="7maart-sol.txt", target="7maart.txt", method="caesar", shift=-23),
     # Hardest level here: Vigenere with keyword from previous level (JEREMY).
-    Level(source="JEREMY-sol.txt", target="JEREMY.txt", method="vigenere", key="JEREMY"),
+    Level(source="JEREMY-sol.txt", target="JEREMY.txt", method="caesar", shift=14),
 )
 
 
