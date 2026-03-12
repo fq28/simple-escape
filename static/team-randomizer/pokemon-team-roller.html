@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Soul-Link Team Roller</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0a14;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    font-family: 'Press Start 2P', monospace;
+    padding: clamp(12px, 3vh, 28px) 14px 80px;
+    user-select: none;
+    -webkit-user-select: none;
+    overflow-x: hidden;
+  }
+
+  @keyframes spin      { to { transform: rotate(360deg); } }
+  @keyframes fadeSlide { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+  @keyframes ruleReveal {
+    0%   { opacity:0; transform: scale(.92) translateY(6px); letter-spacing: 4px; }
+    60%  { opacity:1; transform: scale(1.02); letter-spacing: 1.5px; }
+    100% { opacity:1; transform: scale(1);    letter-spacing: 1.5px; }
+  }
+  @keyframes rulePulse {
+    0%,100% { box-shadow: 0 0 12px #ef444430; }
+    50%     { box-shadow: 0 0 28px #ef444488; }
+  }
+  @keyframes flash {
+    0%,100% { opacity:1; }
+    50%     { opacity:.3; }
+  }
+
+  /* ── Header ── */
+  #header { text-align: center; margin-bottom: 16px; }
+  .soul-link-row { display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:8px; }
+  .soul-link-label { color:#ef4444; font-size:13px; letter-spacing:3px; }
+  .title-main { color:#f0f0f0; font-size:16px; letter-spacing:3px; margin-bottom:6px; }
+  .title-sub  { color:#333355; font-size:7px; letter-spacing:1px; }
+  .pokeball { display:block; }
+  .pokeball.spinning { animation: spin .35s linear infinite; }
+
+  /* ── Pool row ── */
+  #pool-row { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+  #pool-row label { color:#444466; font-size:9px; letter-spacing:1px; }
+  #pool-input {
+    background:#12122a; border:1px solid #252545; border-radius:4px;
+    color:#e0e0e0; font-family:'Press Start 2P',monospace; font-size:12px;
+    padding:9px 12px; width:90px; text-align:center; outline:none;
+    transition:border-color .2s; -moz-appearance:textfield;
+  }
+  #pool-input:focus { border-color:#ef4444; }
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
+
+  /* ── Roll button ── */
+  #roll-btn {
+    background: linear-gradient(135deg,#ef4444,#b91c1c);
+    color:#fff; font-family:'Press Start 2P',monospace; font-size:11px;
+    padding:14px 36px; border-radius:6px; border:none; cursor:pointer;
+    letter-spacing:2px;
+    box-shadow: 0 5px 0 #7f1d1d, 0 0 28px rgba(239,68,68,.4);
+    margin-bottom:18px; transition:transform .1s, background .2s;
+    -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+    width: 100%; max-width: min(calc(100vw - 28px), 440px);
+  }
+  #roll-btn:active  { transform:scale(.95); }
+  #roll-btn.rolling { background:#1a1a2e; box-shadow:none; opacity:.6; cursor:not-allowed; }
+
+  /* ── Number grid ── */
+  #num-grid {
+    display:grid; grid-template-columns:repeat(3,1fr);
+    gap:10px; width:100%; max-width:min(calc(100vw - 28px), 440px); margin-bottom:16px;
+  }
+  .num-card {
+    background:#10101e; border:2px solid #1e1e38; border-radius:10px;
+    padding:14px 8px 18px; text-align:center; box-shadow:0 5px 0 #000;
+    position:relative; cursor:pointer;
+    transition:transform .15s, border-color .15s, background .15s, box-shadow .15s;
+    -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+    min-height: 90px;
+  }
+  .num-card:active { transform:scale(.96); }
+  .num-card.rerolling { animation: flash .18s linear 3; }
+  .card-slot { font-size:9px; margin-bottom:7px; letter-spacing:1px; }
+  .card-num  { font-size:26px; line-height:1; color:#e8e8e8; transition:color .1s, font-size .1s, text-shadow .1s; }
+  .card-num.empty   { font-size:18px; color:#222244; }
+  .card-num.rolling { font-size:16px; }
+
+  /* ── Rule box ── */
+  #rule-box {
+    width:100%; max-width:min(calc(100vw - 28px), 440px);
+    border-radius:10px; border:1px solid #1a1a34;
+    padding:14px 16px; margin-bottom:10px;
+    background:#0c0c1c;
+    transition: border-color .3s, opacity .4s, transform .4s;
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  #rule-box.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    animation: fadeSlide .4s ease;
+  }
+
+  /* tier: uncommon (11%+) — red, existing style */
+  #rule-box.tier-uncommon  { border-color:#ef444455; animation: fadeSlide .4s ease, rulePulseRed 2s ease-in-out .5s 3; }
+  #rule-title.tier-uncommon { color:#ef4444; }
+
+  /* tier: rare (6–10%) — blue */
+  #rule-box.tier-rare      { border-color:#3b82f688; animation: fadeSlide .4s ease, rulePulseBlue 2s ease-in-out .5s 3; background:#090d18; }
+  #rule-title.tier-rare    { color:#60a5fa; }
+
+  /* tier: epic (2–5%) — purple shimmer */
+  #rule-box.tier-epic      { border-color:#a78bfa88; animation: fadeSlide .4s ease, rulePulsePurple 2s ease-in-out .5s 3; background:#0d0914; }
+  #rule-title.tier-epic    { color:#a78bfa; }
+
+  /* tier: legendary (<=1%) — gold explosion */
+  #rule-box.tier-legendary { border-color:#fbbf24; animation: fadeSlide .2s ease, legendaryPulse 1.4s ease-in-out .2s 4; background:#120e02; }
+  #rule-title.tier-legendary { color:#fbbf24; letter-spacing:4px; }
+
+  @keyframes rulePulseRed    { 0%,100%{box-shadow:0 0 10px #ef444420} 50%{box-shadow:0 0 28px #ef444477} }
+  @keyframes rulePulseBlue   { 0%,100%{box-shadow:0 0 10px #3b82f620} 50%{box-shadow:0 0 28px #3b82f677} }
+  @keyframes rulePulsePurple { 0%,100%{box-shadow:0 0 10px #a78bfa20} 50%{box-shadow:0 0 32px #a78bfa99} }
+  @keyframes legendaryPulse  { 0%{box-shadow:0 0 0 #fbbf2400} 30%{box-shadow:0 0 48px #fbbf24cc, 0 0 90px #f59e0b66} 70%{box-shadow:0 0 28px #fbbf2488} 100%{box-shadow:0 0 8px #fbbf2433} }
+
+  #rule-title {
+    font-size:8px; color:#333355; letter-spacing:2px;
+    text-align:center; margin-bottom:10px;
+    transition: color .3s;
+  }
+  #rule-text {
+    font-size:9px; color:#555577; text-align:center; line-height:2;
+    letter-spacing:.5px;
+  }
+  #rule-text.has-rule {
+    color:#e8e8e8;
+    animation: ruleReveal .6s ease .2s both;
+  }
+  #rule-text.tier-legendary {
+    color:#fef3c7;
+    animation: ruleReveal .8s ease .3s both;
+    text-shadow: 0 0 12px #fbbf2466;
+  }
+
+  /* ── Cog button ── */
+  #cog-btn {
+    position:fixed; bottom:14px; right:14px;
+    width:32px; height:32px; border-radius:50%;
+    background:#12122a; border:1px solid #252545;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    color:#444466; font-size:14px; transition:all .2s;
+    -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+    z-index:100;
+  }
+  #cog-btn:hover  { border-color:#ef4444; color:#ef4444; }
+  #cog-btn.open   { background:#ef4444; border-color:#ef4444; color:#fff; transform:rotate(45deg); }
+
+  /* ── Rules panel ── */
+  #rules-panel {
+    display:none;
+    position:fixed; bottom:56px; right:14px;
+    width:min(300px, calc(100vw - 28px));
+    background:#0e0e1e; border:1px solid #252545; border-radius:10px;
+    padding:14px; z-index:99;
+    box-shadow: 0 8px 32px #00000088;
+  }
+  #rules-panel.open { display:block; animation: fadeSlide .25s ease; }
+  #rules-panel h3 { font-size:8px; color:#ef4444; letter-spacing:1px; margin-bottom:10px; }
+
+  #rules-list { margin-bottom:10px; }
+  .rule-item {
+    display:flex; align-items:center; gap:6px;
+    margin-bottom:7px;
+  }
+  .rule-text-input {
+    flex:1; background:#12122a; border:1px solid #1e1e38; border-radius:4px;
+    color:#e0e0e0; font-family:'Press Start 2P',monospace; font-size:6px;
+    padding:5px 7px; outline:none; transition:border-color .2s;
+    user-select:text; -webkit-user-select:text;
+  }
+  .rule-text-input:focus { border-color:#a78bfa; }
+  .rule-pct-input {
+    width:38px; background:#12122a; border:1px solid #1e1e38; border-radius:4px;
+    color:#a78bfa; font-family:'Press Start 2P',monospace; font-size:6px;
+    padding:5px 4px; text-align:center; outline:none;
+    transition:border-color .2s; -moz-appearance:textfield;
+    user-select:text; -webkit-user-select:text;
+  }
+  .rule-pct-input:focus { border-color:#a78bfa; }
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
+  .pct-label { font-size:6px; color:#333355; }
+  .rule-del {
+    background:none; border:none; color:#333355; cursor:pointer;
+    font-size:12px; padding:2px 4px; line-height:1;
+    font-family: sans-serif;
+    transition:color .15s;
+  }
+  .rule-del:hover { color:#ef4444; }
+
+  #add-rule-btn {
+    width:100%; background:#12122a; border:1px solid #252545; border-radius:4px;
+    color:#444466; font-family:'Press Start 2P',monospace; font-size:6px;
+    padding:6px; cursor:pointer; letter-spacing:1px;
+    transition:all .2s; margin-bottom:8px;
+  }
+  #add-rule-btn:hover { border-color:#a78bfa; color:#a78bfa; }
+
+  #rules-total {
+    font-size:6px; color:#333355; text-align:right; letter-spacing:1px;
+  }
+  #rules-total span { color:#a78bfa; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="soul-link-row">
+    <svg class="pokeball" id="pb-left"  width="26" height="26" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1a1a2e" stroke="#3a3a5a" stroke-width="1"/><path d="M1 12 Q1 2 12 2 Q23 2 23 12Z" fill="#ef4444" opacity="0.85"/><line x1="1" y1="12" x2="23" y2="12" stroke="#3a3a5a" stroke-width="1.5"/><circle cx="12" cy="12" r="3.5" fill="#1a1a2e" stroke="#3a3a5a" stroke-width="1.5"/><circle cx="12" cy="12" r="1.5" fill="#e5e5e5"/></svg>
+    <span class="soul-link-label">SOUL-LINK</span>
+    <svg class="pokeball" id="pb-right" width="26" height="26" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1a1a2e" stroke="#3a3a5a" stroke-width="1"/><path d="M1 12 Q1 2 12 2 Q23 2 23 12Z" fill="#ef4444" opacity="0.85"/><line x1="1" y1="12" x2="23" y2="12" stroke="#3a3a5a" stroke-width="1.5"/><circle cx="12" cy="12" r="3.5" fill="#1a1a2e" stroke="#3a3a5a" stroke-width="1.5"/><circle cx="12" cy="12" r="1.5" fill="#e5e5e5"/></svg>
+  </div>
+  <div class="title-main">TEAM ROLLER</div>
+  <div class="title-sub">INFINITE FUSION · NUZLOCKE · HARD MODE</div>
+</div>
+
+<div id="pool-row">
+  <label for="pool-input">POOL</label>
+  <input id="pool-input" type="number" min="6" max="300" value="30"/>
+  <label for="pool-input">MON</label>
+</div>
+
+<button id="roll-btn">▶  RANDOMIZE TEAM</button>
+
+<div id="num-grid"></div>
+
+<div id="rule-box">
+  <div id="rule-title">SPECIAL RULE</div>
+  <div id="rule-text"></div>
+</div>
+
+<!-- Cog -->
+<button id="cog-btn" title="Edit rules">⚙</button>
+
+<!-- Rules editor panel -->
+<div id="rules-panel">
+  <h3>⚙ SPECIAL RULES</h3>
+  <div id="rules-list"></div>
+  <button id="add-rule-btn">+ ADD RULE</button>
+  <div id="rules-total">TOTAL: <span id="total-pct">0</span>% &nbsp;·&nbsp; NOTHING: <span id="nothing-pct">100</span>%</div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Constants & state
+// ─────────────────────────────────────────────────────────────────────────────
+const ROWS = 5, COLS = 6, BOX_SIZE = 30;
+const COLORS = ["#ef4444","#f97316","#eab308","#22c55e","#a78bfa","#ec4899"];
+
+let team    = new Array(6).fill(null);
+let rolling = false;
+let rollIv  = null;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Storage helpers (localStorage, fallback to cookie)
+// ─────────────────────────────────────────────────────────────────────────────
+function saveData(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {
+    try {
+      const d = new Date(); d.setFullYear(d.getFullYear() + 5);
+      document.cookie = `${key}=${encodeURIComponent(JSON.stringify(value))};expires=${d.toUTCString()};path=/`;
+    } catch(e2) {}
+  }
+}
+
+function loadData(key) {
+  try {
+    const v = localStorage.getItem(key);
+    if (v) return JSON.parse(v);
+  } catch(e) {}
+  try {
+    const match = document.cookie.split('; ').find(r => r.startsWith(key + '='));
+    if (match) return JSON.parse(decodeURIComponent(match.split('=').slice(1).join('=')));
+  } catch(e) {}
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Rules state
+// ─────────────────────────────────────────────────────────────────────────────
+function normalizeRules(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw.map(r => ({ text: String(r.text || ''), pct: parseFloat(r.pct) || 0 }));
+}
+
+let rules = normalizeRules(loadData('soullink_rules'));
+
+function saveRules() {
+  saveData('soullink_rules', rules);
+}
+
+function rollRule() {
+  if (!rules.length) return null;
+  const total = rules.reduce((s, r) => s + (parseFloat(r.pct) || 0), 0);
+  if (total <= 0) return null;
+  const rand = Math.random() * 100;
+  let acc = 0;
+  for (const r of rules) {
+    acc += parseFloat(r.pct) || 0;
+    if (rand < acc) return { text: r.text || '(unnamed rule)', pct: parseFloat(r.pct) || 0 };
+  }
+  return null;
+}
+
+function getRuleTier(pct) {
+  if (pct <= 1)  return 'legendary';
+  if (pct <= 5)  return 'epic';
+  if (pct <= 10) return 'rare';
+  return 'uncommon';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+function getMax() {
+  const v = parseInt(document.getElementById('pool-input').value, 10);
+  return isNaN(v) ? 30 : Math.max(6, Math.min(300, v));
+}
+
+function randExcluding(max, exclude) {
+  const pool = [];
+  for (let i = 1; i <= max; i++) {
+    if (!exclude.includes(i)) pool.push(i);
+  }
+  if (!pool.length) return Math.floor(Math.random() * max) + 1;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function genTeam(max) {
+  const s = new Set();
+  while (s.size < 6) s.add(Math.floor(Math.random() * max) + 1);
+  return [...s];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Build DOM
+// ─────────────────────────────────────────────────────────────────────────────
+function buildGrid() {
+  const grid = document.getElementById('num-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const card = document.createElement('div');
+    card.className = 'num-card';
+    card.dataset.idx = i;
+    card.innerHTML = `
+      <div class="card-slot" id="slot-label-${i}" style="color:${COLORS[i]}">SLOT ${i+1}</div>
+      <div class="card-num empty" id="card-num-${i}">—</div>`;
+
+    card.addEventListener('pointerdown', (e) => {
+      if (rolling) return;
+      if (e.button !== undefined && e.button !== 0) return;
+      const idx = parseInt(card.dataset.idx);
+      // Only reroll if this slot has a number
+      if (team[idx] === null) return;
+      rerollSlot(idx);
+    });
+
+    grid.appendChild(card);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Render
+// ─────────────────────────────────────────────────────────────────────────────
+function renderCards(nums, isRolling) {
+  for (let i = 0; i < 6; i++) {
+    const num   = nums[i];
+    const color = COLORS[i];
+    const numEl = document.getElementById(`card-num-${i}`);
+
+    if (num === null) {
+      numEl.textContent = '—';
+      numEl.className   = 'card-num empty';
+    } else {
+      numEl.textContent = num;
+      numEl.className   = 'card-num' + (isRolling ? ' rolling' : '');
+      numEl.style.color = '#e8e8e8';
+      numEl.style.textShadow = 'none';
+    }
+  }
+}
+
+const TIER_LABELS = {
+  legendary: 'LEGENDARY RULE',
+  epic:      'EPIC RULE',
+  rare:      'RARE RULE',
+  uncommon:  'SPECIAL RULE',
+};
+
+function showRuleBox(result) {
+  const box    = document.getElementById('rule-box');
+  const title  = document.getElementById('rule-title');
+  const textEl = document.getElementById('rule-text');
+
+  box.className = '';
+  title.className = '';
+  textEl.className = '';
+  textEl.style.color = '';
+  void box.offsetWidth; // force reflow
+
+  if (result) {
+    const tier = getRuleTier(result.pct);
+    box.className   = 'show tier-' + tier;
+    title.className = 'tier-' + tier;
+    title.textContent = TIER_LABELS[tier];
+    textEl.className  = 'has-rule' + (tier === 'legendary' ? ' tier-legendary' : '');
+    textEl.textContent = result.text;
+  } else {
+    box.className     = 'show';
+    title.textContent = 'SPECIAL RULE';
+    textEl.textContent = 'NO SPECIAL RULE THIS TIME.';
+    textEl.style.color = '#333355';
+  }
+}
+
+function hideRuleBox() {
+  const box = document.getElementById('rule-box');
+  box.className = '';
+  // don't use display:none — box always occupies space so layout never shifts
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Roll full team
+// ─────────────────────────────────────────────────────────────────────────────
+function roll() {
+  if (rolling) return;
+  const max = getMax();
+  document.getElementById('pool-input').value = max;
+  rolling = true;
+  hideRuleBox();
+
+  const btn = document.getElementById('roll-btn');
+  btn.textContent = 'ROLLING...';
+  btn.classList.add('rolling');
+  document.getElementById('pb-left').classList.add('spinning');
+  document.getElementById('pb-right').classList.add('spinning');
+
+  let n = 0;
+  rollIv = setInterval(() => {
+    renderCards(genTeam(max), true);
+    if (++n >= 16) {
+      clearInterval(rollIv);
+      team = genTeam(max);
+      rolling = false;
+      renderCards(team, false);
+      btn.textContent = '▶  RANDOMIZE TEAM';
+      btn.classList.remove('rolling');
+      document.getElementById('pb-left').classList.remove('spinning');
+      document.getElementById('pb-right').classList.remove('spinning');
+
+      // Roll rule after short delay for drama
+      setTimeout(() => {
+        const rule = rollRule();
+        showRuleBox(rule);
+      }, 400);
+    }
+  }, 55);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reroll single slot
+// ─────────────────────────────────────────────────────────────────────────────
+function rerollSlot(idx) {
+  const max     = getMax();
+  const others  = team.filter((_, i) => i !== idx).filter(v => v !== null);
+  const card    = document.querySelector(`.num-card[data-idx="${idx}"]`);
+  const numEl   = document.getElementById(`card-num-${idx}`);
+
+  card.classList.add('rerolling');
+  card.addEventListener('animationend', () => card.classList.remove('rerolling'), { once: true });
+
+  let n = 0;
+  const iv = setInterval(() => {
+    numEl.textContent = randExcluding(max, others);
+    numEl.className   = 'card-num rolling';
+    if (++n >= 10) {
+      clearInterval(iv);
+      const newVal      = randExcluding(max, others);
+      team[idx]         = newVal;
+      numEl.textContent = newVal;
+      numEl.className   = 'card-num';
+      numEl.style.color = '#e8e8e8';
+    }
+  }, 55);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Rules editor
+// ─────────────────────────────────────────────────────────────────────────────
+function renderRulesPanel() {
+  const list = document.getElementById('rules-list');
+  list.innerHTML = '';
+
+  rules.forEach((rule, i) => {
+    const item = document.createElement('div');
+    item.className = 'rule-item';
+
+    const textIn = document.createElement('input');
+    textIn.type        = 'text';
+    textIn.className   = 'rule-text-input';
+    textIn.placeholder = 'Rule description...';
+    textIn.value       = rule.text || '';
+    const saveText = () => { rules[i].text = textIn.value; saveRules(); };
+    textIn.addEventListener('input',  saveText);
+    textIn.addEventListener('change', saveText);
+    textIn.addEventListener('blur',   saveText);
+
+    const pctIn = document.createElement('input');
+    pctIn.type      = 'text';
+    pctIn.inputMode = 'decimal';
+    pctIn.className = 'rule-pct-input';
+    pctIn.value     = rule.pct ?? 5;
+    const savePct = () => {
+      const v = parseFloat(pctIn.value.replace(',', '.'));
+      rules[i].pct = isNaN(v) ? 0 : Math.max(0, Math.min(100, v));
+      pctIn.value  = rules[i].pct;
+      saveRules();
+      updateTotal();
+    };
+    pctIn.addEventListener('input',  savePct);
+    pctIn.addEventListener('change', savePct);
+    pctIn.addEventListener('blur',   savePct);
+
+    const pctLbl = document.createElement('span');
+    pctLbl.className   = 'pct-label';
+    pctLbl.textContent = '%';
+
+    const del = document.createElement('button');
+    del.className   = 'rule-del';
+    del.textContent = '✕';
+    del.title       = 'Remove rule';
+    del.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      rules.splice(i, 1);
+      saveRules();
+      renderRulesPanel();
+    });
+
+    item.appendChild(textIn);
+    item.appendChild(pctIn);
+    item.appendChild(pctLbl);
+    item.appendChild(del);
+    list.appendChild(item);
+  });
+
+  updateTotal();
+}
+
+function updateTotal() {
+  const total   = rules.reduce((s, r) => s + (parseFloat(r.pct) || 0), 0);
+  const nothing = Math.max(0, 100 - total);
+  document.getElementById('total-pct').textContent   = total.toFixed(1).replace(/\.0$/, '');
+  document.getElementById('nothing-pct').textContent = nothing.toFixed(1).replace(/\.0$/, '');
+}
+
+document.getElementById('add-rule-btn').addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  rules.push({ text: '', pct: 5 });
+  saveRules();
+  renderRulesPanel();
+});
+
+const cogBtn     = document.getElementById('cog-btn');
+const rulesPanel = document.getElementById('rules-panel');
+let panelOpen    = false;
+
+cogBtn.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  panelOpen = !panelOpen;
+  cogBtn.classList.toggle('open', panelOpen);
+  if (panelOpen) {
+    rulesPanel.classList.add('open');
+    renderRulesPanel();
+  } else {
+    rulesPanel.classList.remove('open');
+  }
+});
+
+// Close panel when tapping outside
+document.addEventListener('pointerdown', (e) => {
+  if (!panelOpen) return;
+  if (!rulesPanel.contains(e.target) && e.target !== cogBtn) {
+    panelOpen = false;
+    cogBtn.classList.remove('open');
+    rulesPanel.classList.remove('open');
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────────────────────────────────────
+buildGrid();
+renderCards(team, false); // empty slots
+
+document.getElementById('roll-btn').addEventListener('click', roll);
+
+document.getElementById('pool-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') roll();
+});
+
+document.getElementById('pool-input').addEventListener('blur', function() {
+  const v = parseInt(this.value, 10);
+  this.value = isNaN(v) ? 30 : Math.max(6, Math.min(300, v));
+});
+</script>
+</body>
+</html>
