@@ -31,13 +31,46 @@
     60%  { opacity:1; transform: scale(1.02); letter-spacing: 1.5px; }
     100% { opacity:1; transform: scale(1);    letter-spacing: 1.5px; }
   }
-  @keyframes rulePulse {
-    0%,100% { box-shadow: 0 0 12px #ef444430; }
-    50%     { box-shadow: 0 0 28px #ef444488; }
-  }
   @keyframes flash {
     0%,100% { opacity:1; }
     50%     { opacity:.3; }
+  }
+
+  /* ── Slot reveal ── */
+  @keyframes slamIn {
+    0%   { transform: scale(1.35) translateY(-14px); opacity: 0; }
+    55%  { transform: scale(0.93) translateY(3px);   opacity: 1; }
+    78%  { transform: scale(1.05); }
+    100% { transform: scale(1) translateY(0); }
+  }
+  .num-card.slam { animation: slamIn .32s cubic-bezier(.36,.07,.19,.97) both; }
+
+  /* ── Shiny ── */
+  @keyframes shinyGlow {
+    0%,100% { box-shadow: 0 5px 0 #000, 0 0 8px #fbbf2444; border-color: #fbbf2466; }
+    50%     { box-shadow: 0 5px 0 #000, 0 0 30px #fbbf24cc, 0 0 60px #f59e0b44; border-color: #fbbf24; }
+  }
+  @keyframes shinyNum {
+    0%,100% { color: #e8e8e8; text-shadow: none; }
+    50%     { color: #fef3c7; text-shadow: 0 0 16px #fbbf24cc; }
+  }
+  @keyframes shinyBadge {
+    from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+  .num-card.shiny {
+    background: #110e02;
+    animation: shinyGlow 2s ease-in-out infinite;
+  }
+  .num-card.shiny .card-num { animation: shinyNum 2s ease-in-out infinite; }
+  .num-card.shiny::after {
+    content: '✦ SHINY';
+    position: absolute;
+    bottom: 6px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 5px; letter-spacing: 1.5px; color: #fbbf24;
+    white-space: nowrap;
+    animation: shinyBadge .5s ease .15s both;
   }
 
   /* ── Header ── */
@@ -85,7 +118,7 @@
     background:#10101e; border:2px solid #1e1e38; border-radius:10px;
     padding:14px 8px 18px; text-align:center; box-shadow:0 5px 0 #000;
     position:relative; cursor:pointer;
-    transition:transform .15s, border-color .15s, background .15s, box-shadow .15s;
+    transition:transform .15s, border-color .3s, background .3s, box-shadow .3s;
     -webkit-tap-highlight-color:transparent; touch-action:manipulation;
     min-height: 90px;
   }
@@ -118,19 +151,15 @@
     animation: fadeSlide .4s ease;
   }
 
-  /* tier: uncommon (11%+) — red, existing style */
   #rule-box.tier-uncommon  { border-color:#ef444455; animation: fadeSlide .4s ease, rulePulseRed 2s ease-in-out .5s 3; }
   #rule-title.tier-uncommon { color:#ef4444; }
 
-  /* tier: rare (6–10%) — blue */
   #rule-box.tier-rare      { border-color:#3b82f688; animation: fadeSlide .4s ease, rulePulseBlue 2s ease-in-out .5s 3; background:#090d18; }
   #rule-title.tier-rare    { color:#60a5fa; }
 
-  /* tier: epic (2–5%) — purple shimmer */
   #rule-box.tier-epic      { border-color:#a78bfa88; animation: fadeSlide .4s ease, rulePulsePurple 2s ease-in-out .5s 3; background:#0d0914; }
   #rule-title.tier-epic    { color:#a78bfa; }
 
-  /* tier: legendary (<=1%) — gold explosion */
   #rule-box.tier-legendary { border-color:#fbbf24; animation: fadeSlide .2s ease, legendaryPulse 1.4s ease-in-out .2s 4; background:#120e02; }
   #rule-title.tier-legendary { color:#fbbf24; letter-spacing:4px; }
 
@@ -175,28 +204,69 @@
   #rules-panel {
     display:none;
     position:fixed; bottom:56px; right:14px;
-    width:min(300px, calc(100vw - 28px));
+    width:min(380px, calc(100vw - 28px));
     background:#0e0e1e; border:1px solid #252545; border-radius:10px;
     padding:14px; z-index:99;
     box-shadow: 0 8px 32px #00000088;
+    max-height: calc(100dvh - 100px);
+    display: none;
+    flex-direction: column;
   }
-  #rules-panel.open { display:block; animation: fadeSlide .25s ease; }
-  #rules-panel h3 { font-size:8px; color:#ef4444; letter-spacing:1px; margin-bottom:10px; }
+  #rules-panel.open { display:flex; animation: fadeSlide .25s ease; }
+  #rules-panel h3   { font-size:8px; color:#ef4444; letter-spacing:1px; margin-bottom:10px; flex-shrink:0; }
 
-  #rules-list { margin-bottom:10px; }
-  .rule-item {
-    display:flex; align-items:center; gap:6px;
-    margin-bottom:7px;
+  #rules-list {
+    margin-bottom:10px;
+    overflow-y: auto;
+    flex: 1;
+    /* subtle scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: #252545 transparent;
   }
+  #rules-list::-webkit-scrollbar { width: 4px; }
+  #rules-list::-webkit-scrollbar-thumb { background: #252545; border-radius: 2px; }
+
+  .rule-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #12122a;
+  }
+  .rule-item:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+
+  /* textarea for rule text — auto-resizes, supports long content */
   .rule-text-input {
-    flex:1; background:#12122a; border:1px solid #1e1e38; border-radius:4px;
+    width: 100%;
+    background:#12122a; border:1px solid #1e1e38; border-radius:4px;
     color:#e0e0e0; font-family:'Press Start 2P',monospace; font-size:6px;
-    padding:5px 7px; outline:none; transition:border-color .2s;
+    padding:6px 7px; outline:none; transition:border-color .2s;
     user-select:text; -webkit-user-select:text;
+    resize: none;
+    line-height: 1.9;
+    min-height: 30px;
+    overflow: hidden;
   }
   .rule-text-input:focus { border-color:#a78bfa; }
+
+  /* controls row: reorder buttons + pct + delete */
+  .rule-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .rule-move {
+    background: none; border: 1px solid #1e1e38; border-radius: 3px;
+    color: #333355; cursor: pointer;
+    font-size: 9px; padding: 3px 5px; line-height: 1;
+    font-family: sans-serif; transition: all .15s; flex-shrink: 0;
+  }
+  .rule-move:hover:not(:disabled) { border-color:#a78bfa; color:#a78bfa; }
+  .rule-move:disabled { opacity: .18; cursor: default; }
+
   .rule-pct-input {
-    width:38px; background:#12122a; border:1px solid #1e1e38; border-radius:4px;
+    width:46px; background:#12122a; border:1px solid #1e1e38; border-radius:4px;
     color:#a78bfa; font-family:'Press Start 2P',monospace; font-size:6px;
     padding:5px 4px; text-align:center; outline:none;
     transition:border-color .2s; -moz-appearance:textfield;
@@ -205,12 +275,11 @@
   .rule-pct-input:focus { border-color:#a78bfa; }
   input[type=number]::-webkit-inner-spin-button,
   input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
-  .pct-label { font-size:6px; color:#333355; }
+  .pct-label { font-size:6px; color:#333355; flex-shrink:0; }
   .rule-del {
-    background:none; border:none; color:#333355; cursor:pointer;
+    background:none; border:none; color:#2a2a44; cursor:pointer;
     font-size:12px; padding:2px 4px; line-height:1;
-    font-family: sans-serif;
-    transition:color .15s;
+    font-family: sans-serif; transition:color .15s; margin-left:auto;
   }
   .rule-del:hover { color:#ef4444; }
 
@@ -218,12 +287,12 @@
     width:100%; background:#12122a; border:1px solid #252545; border-radius:4px;
     color:#444466; font-family:'Press Start 2P',monospace; font-size:6px;
     padding:6px; cursor:pointer; letter-spacing:1px;
-    transition:all .2s; margin-bottom:8px;
+    transition:all .2s; margin-bottom:8px; flex-shrink:0;
   }
   #add-rule-btn:hover { border-color:#a78bfa; color:#a78bfa; }
 
   #rules-total {
-    font-size:6px; color:#333355; text-align:right; letter-spacing:1px;
+    font-size:6px; color:#333355; text-align:right; letter-spacing:1px; flex-shrink:0;
   }
   #rules-total span { color:#a78bfa; }
 </style>
@@ -270,12 +339,85 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants & state
 // ─────────────────────────────────────────────────────────────────────────────
-const ROWS = 5, COLS = 6, BOX_SIZE = 30;
-const COLORS = ["#ef4444","#f97316","#eab308","#22c55e","#a78bfa","#ec4899"];
+const COLORS       = ["#ef4444","#f97316","#eab308","#22c55e","#a78bfa","#ec4899"];
+const SHINY_CHANCE = 1 / 512;
 
-let team    = new Array(6).fill(null);
-let rolling = false;
-let rollIv  = null;
+let team     = new Array(6).fill(null);
+let rolling  = false;
+let rollIv   = null;
+let shinyIdx = -1; // which slot is shiny this roll (-1 = none)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Web Audio — all sounds synthesised, no files
+// ─────────────────────────────────────────────────────────────────────────────
+let audioCtx = null;
+
+function initAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e) { return null; }
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+// Core helper: schedule a single synthesised note
+function playNote(freq, delay, dur, vol = 0.15, type = 'sine', slide = 0) {
+  const ctx = initAudio();
+  if (!ctx) return;
+  const t   = ctx.currentTime + delay;
+  const osc = ctx.createOscillator();
+  const gn  = ctx.createGain();
+  osc.connect(gn);
+  gn.connect(ctx.destination);
+  osc.type = type;
+  osc.frequency.setValueAtTime(slide || freq, t);
+  if (slide) osc.frequency.exponentialRampToValueAtTime(freq, t + dur * 0.4);
+  gn.gain.setValueAtTime(vol, t);
+  gn.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  osc.start(t);
+  osc.stop(t + dur + 0.01);
+}
+
+// Thud-click as each slot slams in — ascending pitch per slot index
+function sfxSlotTick(slotIdx) {
+  const freq = 150 + slotIdx * 45;
+  playNote(freq, 0, 0.13, 0.20, 'triangle', freq * 2.8);
+}
+
+// Rule chimes — escalating drama per tier
+function sfxRuleUncommon() {
+  playNote(523, 0,    0.32, 0.11);        // C5
+  playNote(659, 0.18, 0.32, 0.11);        // E5
+}
+function sfxRuleRare() {
+  playNote(523, 0,    0.28, 0.13);        // C5
+  playNote(659, 0.13, 0.28, 0.13);        // E5
+  playNote(784, 0.26, 0.42, 0.14);        // G5
+}
+function sfxRuleEpic() {
+  [392, 494, 587, 784].forEach((f, i) =>
+    playNote(f, i * 0.1, 0.3 + i * 0.03, 0.12, 'triangle'));
+}
+function sfxRuleLegendary() {
+  // Rising square-wave fanfare
+  [262, 330, 392, 523, 659, 784].forEach((f, i) =>
+    playNote(f, i * 0.08, 0.28, 0.09, 'square'));
+  // Trailing sparkle cascade (same as shiny but offset)
+  setTimeout(() => sfxShinySparkle(0.065, 0.08), 560);
+}
+
+// The shiny sparkle — ascending pure sine pings (Do Re Mi Sol La Do)
+function sfxShinySparkle(spacing = 0.07, vol = 0.10) {
+  [1047, 1175, 1319, 1568, 1760, 2093].forEach((f, i) =>
+    playNote(f, i * spacing, 0.22, vol, 'sine'));
+}
+function sfxShiny() { sfxShinySparkle(0.07, 0.11); }
+
+function playRuleSfx(tier) {
+  const fn = { uncommon: sfxRuleUncommon, rare: sfxRuleRare, epic: sfxRuleEpic, legendary: sfxRuleLegendary }[tier];
+  if (fn) fn();
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Storage helpers (localStorage, fallback to cookie)
@@ -311,9 +453,7 @@ function normalizeRules(raw) {
 
 let rules = normalizeRules(loadData('soullink_rules'));
 
-function saveRules() {
-  saveData('soullink_rules', rules);
-}
+function saveRules() { saveData('soullink_rules', rules); }
 
 function rollRule() {
   if (!rules.length) return null;
@@ -358,6 +498,11 @@ function genTeam(max) {
   return [...s];
 }
 
+function formatPct(v) {
+  const r = Math.round(v * 10) / 10;
+  return r % 1 === 0 ? String(r) : r.toFixed(1);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Build DOM
 // ─────────────────────────────────────────────────────────────────────────────
@@ -375,10 +520,8 @@ function buildGrid() {
     card.addEventListener('pointerdown', (e) => {
       if (rolling) return;
       if (e.button !== undefined && e.button !== 0) return;
-      const idx = parseInt(card.dataset.idx);
-      // Only reroll if this slot has a number
-      if (team[idx] === null) return;
-      rerollSlot(idx);
+      if (team[i] === null) return;
+      rerollSlot(i);
     });
 
     grid.appendChild(card);
@@ -386,26 +529,66 @@ function buildGrid() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Render
+// Render (during spinner — all at once)
 // ─────────────────────────────────────────────────────────────────────────────
 function renderCards(nums, isRolling) {
   for (let i = 0; i < 6; i++) {
-    const num   = nums[i];
-    const color = COLORS[i];
     const numEl = document.getElementById(`card-num-${i}`);
-
-    if (num === null) {
+    if (nums[i] === null) {
       numEl.textContent = '—';
       numEl.className   = 'card-num empty';
     } else {
-      numEl.textContent = num;
-      numEl.className   = 'card-num' + (isRolling ? ' rolling' : '');
-      numEl.style.color = '#e8e8e8';
+      numEl.textContent      = nums[i];
+      numEl.className        = 'card-num' + (isRolling ? ' rolling' : '');
+      numEl.style.color      = '#e8e8e8';
       numEl.style.textShadow = 'none';
     }
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Staggered slam-in reveal — one card every 160 ms
+// ─────────────────────────────────────────────────────────────────────────────
+function revealSlots(nums, onDone) {
+  for (let i = 0; i < 6; i++) {
+    setTimeout(() => {
+      const numEl = document.getElementById(`card-num-${i}`);
+      const card  = document.querySelector(`.num-card[data-idx="${i}"]`);
+
+      numEl.textContent      = nums[i];
+      numEl.className        = 'card-num';
+      numEl.style.color      = '#e8e8e8';
+      numEl.style.textShadow = 'none';
+
+      card.classList.remove('slam');
+      void card.offsetWidth; // force reflow so animation restarts cleanly
+      card.classList.add('slam');
+      card.addEventListener('animationend', () => card.classList.remove('slam'), { once: true });
+
+      sfxSlotTick(i);
+
+      if (i === 5 && onDone) setTimeout(onDone, 180);
+    }, i * 160);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shiny card
+// ─────────────────────────────────────────────────────────────────────────────
+function applyShiny(idx) {
+  document.querySelector(`.num-card[data-idx="${idx}"]`)?.classList.add('shiny');
+  sfxShiny();
+}
+
+function clearAllShiny() {
+  for (let i = 0; i < 6; i++) {
+    document.querySelector(`.num-card[data-idx="${i}"]`)?.classList.remove('shiny');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Rule box
+// ─────────────────────────────────────────────────────────────────────────────
 const TIER_LABELS = {
   legendary: 'LEGENDARY RULE',
   epic:      'EPIC RULE',
@@ -418,31 +601,30 @@ function showRuleBox(result) {
   const title  = document.getElementById('rule-title');
   const textEl = document.getElementById('rule-text');
 
-  box.className = '';
-  title.className = '';
+  box.className    = '';
+  title.className  = '';
   textEl.className = '';
   textEl.style.color = '';
-  void box.offsetWidth; // force reflow
+  void box.offsetWidth;
 
   if (result) {
     const tier = getRuleTier(result.pct);
-    box.className   = 'show tier-' + tier;
-    title.className = 'tier-' + tier;
-    title.textContent = TIER_LABELS[tier];
-    textEl.className  = 'has-rule' + (tier === 'legendary' ? ' tier-legendary' : '');
+    box.className      = 'show tier-' + tier;
+    title.className    = 'tier-' + tier;
+    title.textContent  = TIER_LABELS[tier];
+    textEl.className   = 'has-rule' + (tier === 'legendary' ? ' tier-legendary' : '');
     textEl.textContent = result.text;
+    playRuleSfx(tier);
   } else {
-    box.className     = 'show';
-    title.textContent = 'SPECIAL RULE';
+    box.className      = 'show';
+    title.textContent  = 'SPECIAL RULE';
     textEl.textContent = 'NO SPECIAL RULE THIS TIME.';
     textEl.style.color = '#333355';
   }
 }
 
 function hideRuleBox() {
-  const box = document.getElementById('rule-box');
-  box.className = '';
-  // don't use display:none — box always occupies space so layout never shifts
+  document.getElementById('rule-box').className = '';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -450,10 +632,15 @@ function hideRuleBox() {
 // ─────────────────────────────────────────────────────────────────────────────
 function roll() {
   if (rolling) return;
+  initAudio(); // must be called during user gesture so AudioContext is allowed
   const max = getMax();
   document.getElementById('pool-input').value = max;
   rolling = true;
   hideRuleBox();
+  clearAllShiny();
+
+  // Decide shiny before the animation starts (1/512 chance, one random slot)
+  shinyIdx = Math.random() < SHINY_CHANCE ? Math.floor(Math.random() * 6) : -1;
 
   const btn = document.getElementById('roll-btn');
   btn.textContent = 'ROLLING...';
@@ -467,18 +654,29 @@ function roll() {
     if (++n >= 16) {
       clearInterval(rollIv);
       team = genTeam(max);
+
+      // Blank cards — they'll reveal one-by-one
+      for (let i = 0; i < 6; i++) {
+        const numEl = document.getElementById(`card-num-${i}`);
+        numEl.textContent = '—';
+        numEl.className   = 'card-num empty';
+      }
+
       rolling = false;
-      renderCards(team, false);
       btn.textContent = '▶  RANDOMIZE TEAM';
       btn.classList.remove('rolling');
       document.getElementById('pb-left').classList.remove('spinning');
       document.getElementById('pb-right').classList.remove('spinning');
 
-      // Roll rule after short delay for drama
-      setTimeout(() => {
-        const rule = rollRule();
-        showRuleBox(rule);
-      }, 400);
+      revealSlots(team, () => {
+        // Rule reveal after all slots land
+        setTimeout(() => showRuleBox(rollRule()), 250);
+
+        // Shiny reveal — a beat after all cards shown, like in the games
+        if (shinyIdx >= 0) {
+          setTimeout(() => applyShiny(shinyIdx), 700);
+        }
+      });
     }
   }, 55);
 }
@@ -487,10 +685,11 @@ function roll() {
 // Reroll single slot
 // ─────────────────────────────────────────────────────────────────────────────
 function rerollSlot(idx) {
-  const max     = getMax();
-  const others  = team.filter((_, i) => i !== idx).filter(v => v !== null);
-  const card    = document.querySelector(`.num-card[data-idx="${idx}"]`);
-  const numEl   = document.getElementById(`card-num-${idx}`);
+  initAudio();
+  const max    = getMax();
+  const others = team.filter((_, i) => i !== idx).filter(v => v !== null);
+  const card   = document.querySelector(`.num-card[data-idx="${idx}"]`);
+  const numEl  = document.getElementById(`card-num-${idx}`);
 
   card.classList.add('rerolling');
   card.addEventListener('animationend', () => card.classList.remove('rerolling'), { once: true });
@@ -506,6 +705,7 @@ function rerollSlot(idx) {
       numEl.textContent = newVal;
       numEl.className   = 'card-num';
       numEl.style.color = '#e8e8e8';
+      sfxSlotTick(idx);
     }
   }, 55);
 }
@@ -513,6 +713,11 @@ function rerollSlot(idx) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Rules editor
 // ─────────────────────────────────────────────────────────────────────────────
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
 function renderRulesPanel() {
   const list = document.getElementById('rules-list');
   list.innerHTML = '';
@@ -521,31 +726,108 @@ function renderRulesPanel() {
     const item = document.createElement('div');
     item.className = 'rule-item';
 
-    const textIn = document.createElement('input');
-    textIn.type        = 'text';
+    // ── Textarea for rule text (auto-resizes, supports multiline) ──
+    const textIn = document.createElement('textarea');
     textIn.className   = 'rule-text-input';
     textIn.placeholder = 'Rule description...';
     textIn.value       = rule.text || '';
-    const saveText = () => { rules[i].text = textIn.value; saveRules(); };
-    textIn.addEventListener('input',  saveText);
-    textIn.addEventListener('change', saveText);
-    textIn.addEventListener('blur',   saveText);
+    textIn.rows        = 1;
+    textIn.spellcheck  = false;
 
+    const saveText = () => { rules[i].text = textIn.value; saveRules(); };
+    textIn.addEventListener('input',  () => { autoResize(textIn); saveText(); });
+    textIn.addEventListener('blur',   saveText);
+    // Tab → jump to % field; Enter = newline (normal textarea behaviour)
+    textIn.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab' && !e.shiftKey) {
+        e.preventDefault();
+        pctIn.focus(); pctIn.select();
+      }
+    });
+
+    // ── Controls row ──
+    const controls = document.createElement('div');
+    controls.className = 'rule-controls';
+
+    const upBtn = document.createElement('button');
+    upBtn.className   = 'rule-move';
+    upBtn.textContent = '↑';
+    upBtn.title       = 'Move up';
+    upBtn.disabled    = i === 0;
+    upBtn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (i === 0) return;
+      [rules[i-1], rules[i]] = [rules[i], rules[i-1]];
+      saveRules(); renderRulesPanel();
+    });
+
+    const downBtn = document.createElement('button');
+    downBtn.className   = 'rule-move';
+    downBtn.textContent = '↓';
+    downBtn.title       = 'Move down';
+    downBtn.disabled    = i === rules.length - 1;
+    downBtn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (i === rules.length - 1) return;
+      [rules[i], rules[i+1]] = [rules[i+1], rules[i]];
+      saveRules(); renderRulesPanel();
+    });
+
+    // ── % input: save on blur/enter, live total preview on input ──
     const pctIn = document.createElement('input');
     pctIn.type      = 'text';
     pctIn.inputMode = 'decimal';
     pctIn.className = 'rule-pct-input';
-    pctIn.value     = rule.pct ?? 5;
+    pctIn.value     = formatPct(rule.pct ?? 5);
+
     const savePct = () => {
       const v = parseFloat(pctIn.value.replace(',', '.'));
       rules[i].pct = isNaN(v) ? 0 : Math.max(0, Math.min(100, v));
-      pctIn.value  = rules[i].pct;
+      pctIn.value  = formatPct(rules[i].pct);
       saveRules();
       updateTotal();
     };
-    pctIn.addEventListener('input',  savePct);
-    pctIn.addEventListener('change', savePct);
-    pctIn.addEventListener('blur',   savePct);
+    // Live total while typing (don't clamp yet — allow "0." mid-type)
+    pctIn.addEventListener('input', updateTotal);
+    pctIn.addEventListener('blur',  savePct);
+    pctIn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { savePct(); pctIn.blur(); }
+
+      // Tab → next rule's text area
+      if (e.key === 'Tab' && !e.shiftKey) {
+        savePct();
+        const next = list.children[i + 1];
+        if (next) { e.preventDefault(); next.querySelector('.rule-text-input').focus(); }
+      }
+      // Shift+Tab → back to this rule's text
+      if (e.key === 'Tab' && e.shiftKey) { e.preventDefault(); textIn.focus(); }
+
+      // Arrow Up/Down → nudge by 0.5 (Shift = 5)
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        const cur   = parseFloat(pctIn.value.replace(',', '.')) || 0;
+        const delta = e.shiftKey ? 5 : 0.5;
+        const next  = parseFloat((cur + (e.key === 'ArrowUp' ? delta : -delta)).toFixed(1));
+        pctIn.value = formatPct(Math.max(0, Math.min(100, next)));
+        rules[i].pct = parseFloat(pctIn.value);
+        saveRules();
+        updateTotal();
+      }
+
+      // Alt+Arrow → reorder rule
+      if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+        e.preventDefault();
+        const dir = e.key === 'ArrowUp' ? -1 : 1;
+        const j   = i + dir;
+        if (j < 0 || j >= rules.length) return;
+        [rules[i], rules[j]] = [rules[j], rules[i]];
+        saveRules();
+        renderRulesPanel();
+        requestAnimationFrame(() => {
+          list.children[j]?.querySelector('.rule-pct-input')?.focus();
+        });
+      }
+    });
 
     const pctLbl = document.createElement('span');
     pctLbl.className   = 'pct-label';
@@ -562,21 +844,34 @@ function renderRulesPanel() {
       renderRulesPanel();
     });
 
+    controls.appendChild(upBtn);
+    controls.appendChild(downBtn);
+    controls.appendChild(pctIn);
+    controls.appendChild(pctLbl);
+    controls.appendChild(del);
+
     item.appendChild(textIn);
-    item.appendChild(pctIn);
-    item.appendChild(pctLbl);
-    item.appendChild(del);
+    item.appendChild(controls);
     list.appendChild(item);
+
+    requestAnimationFrame(() => autoResize(textIn));
   });
 
   updateTotal();
 }
 
 function updateTotal() {
-  const total   = rules.reduce((s, r) => s + (parseFloat(r.pct) || 0), 0);
+  // Read live values from inputs if panel is open, otherwise use saved rules
+  let total = 0;
+  const inputs = document.querySelectorAll('.rule-pct-input');
+  if (inputs.length) {
+    inputs.forEach(inp => { total += parseFloat(inp.value.replace(',', '.')) || 0; });
+  } else {
+    total = rules.reduce((s, r) => s + (parseFloat(r.pct) || 0), 0);
+  }
   const nothing = Math.max(0, 100 - total);
-  document.getElementById('total-pct').textContent   = total.toFixed(1).replace(/\.0$/, '');
-  document.getElementById('nothing-pct').textContent = nothing.toFixed(1).replace(/\.0$/, '');
+  document.getElementById('total-pct').textContent   = formatPct(total);
+  document.getElementById('nothing-pct').textContent = formatPct(nothing);
 }
 
 document.getElementById('add-rule-btn').addEventListener('pointerdown', (e) => {
@@ -584,6 +879,10 @@ document.getElementById('add-rule-btn').addEventListener('pointerdown', (e) => {
   rules.push({ text: '', pct: 5 });
   saveRules();
   renderRulesPanel();
+  requestAnimationFrame(() => {
+    const items = document.querySelectorAll('.rule-item');
+    if (items.length) items[items.length - 1].querySelector('.rule-text-input').focus();
+  });
 });
 
 const cogBtn     = document.getElementById('cog-btn');
@@ -594,15 +893,10 @@ cogBtn.addEventListener('pointerdown', (e) => {
   e.preventDefault();
   panelOpen = !panelOpen;
   cogBtn.classList.toggle('open', panelOpen);
-  if (panelOpen) {
-    rulesPanel.classList.add('open');
-    renderRulesPanel();
-  } else {
-    rulesPanel.classList.remove('open');
-  }
+  if (panelOpen) { rulesPanel.classList.add('open'); renderRulesPanel(); }
+  else           { rulesPanel.classList.remove('open'); }
 });
 
-// Close panel when tapping outside
 document.addEventListener('pointerdown', (e) => {
   if (!panelOpen) return;
   if (!rulesPanel.contains(e.target) && e.target !== cogBtn) {
@@ -616,7 +910,7 @@ document.addEventListener('pointerdown', (e) => {
 // Init
 // ─────────────────────────────────────────────────────────────────────────────
 buildGrid();
-renderCards(team, false); // empty slots
+renderCards(team, false);
 
 document.getElementById('roll-btn').addEventListener('click', roll);
 
