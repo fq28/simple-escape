@@ -76,8 +76,23 @@
 
   /* ── Header ── */
   #header { text-align: center; margin-bottom: 10px; }
-  .soul-link-row { display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:5px; }
+  .soul-link-row { display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:5px; }
   .soul-link-label { color:#ef4444; font-size:13px; letter-spacing:3px; }
+  .player-name-input {
+    background: none; border: none; border-bottom: 1px solid transparent;
+    font-family: 'Press Start 2P', monospace; font-size: 7px;
+    width: 62px; text-align: center; outline: none; padding: 1px 2px;
+    letter-spacing: .5px; transition: color .2s, border-color .2s;
+    cursor: default; user-select: none; -webkit-user-select: none;
+  }
+  .player-name-input:focus {
+    cursor: text; user-select: text; -webkit-user-select: text;
+    border-bottom-color: currentColor;
+  }
+  #p1-name-input { color: #6655aa; }
+  #p1-name-input:focus { color: #a78bfa; }
+  #p2-name-input { color: #a0336a; }
+  #p2-name-input:focus { color: #ec4899; }
   .title-main { color:#f0f0f0; font-size:16px; letter-spacing:3px; margin-bottom:5px; }
 
   /* ── Team counter (lives in pool row) ── */
@@ -945,9 +960,11 @@
 
 <div id="header">
   <div class="soul-link-row">
+    <input id="p1-name-input" class="player-name-input" type="text" maxlength="12" spellcheck="false" placeholder="PLAYER 1"/>
     <svg class="pokeball" id="pb-left"  width="26" height="26" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1a1a2e" stroke="#3a3a5a" stroke-width="1"/><path d="M1 12 Q1 2 12 2 Q23 2 23 12Z" fill="#ef4444" opacity="0.85"/><path d="M1 12 Q1 22 12 22 Q23 22 23 12Z" fill="#ffffff" opacity="0.9"/><line x1="1" y1="12" x2="23" y2="12" stroke="#3a3a5a" stroke-width="1.5"/><circle cx="12" cy="12" r="3.5" fill="#1a1a2e" stroke="#3a3a5a" stroke-width="1.5"/><circle cx="12" cy="12" r="1.5" fill="#e5e5e5"/></svg>
     <span class="soul-link-label">SOUL-LINK</span>
     <svg class="pokeball" id="pb-right" width="26" height="26" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1a1a2e" stroke="#3a3a5a" stroke-width="1"/><path d="M1 12 Q1 2 12 2 Q23 2 23 12Z" fill="#ef4444" opacity="0.85"/><path d="M1 12 Q1 22 12 22 Q23 22 23 12Z" fill="#ffffff" opacity="0.9"/><line x1="1" y1="12" x2="23" y2="12" stroke="#3a3a5a" stroke-width="1.5"/><circle cx="12" cy="12" r="3.5" fill="#1a1a2e" stroke="#3a3a5a" stroke-width="1.5"/><circle cx="12" cy="12" r="1.5" fill="#e5e5e5"/></svg>
+    <input id="p2-name-input" class="player-name-input" type="text" maxlength="12" spellcheck="false" placeholder="PLAYER 2"/>
   </div>
   <div class="title-main">TEAM ROLLER</div>
   <div id="team-counter"><span>TEAM #</span><input id="team-count-input" type="number" min="0" value="0"/></div>
@@ -1048,9 +1065,9 @@
 const COLORS       = ["#ef4444","#f97316","#eab308","#22c55e","#a78bfa","#ec4899"];
 const SHINY_CHANCE = 1 / 512;
 
-// ── Battle players — edit these names ──
-const BATTLE_PLAYER_1 = 'Matin';  // ← your name
-const BATTLE_PLAYER_2 = 'Lunal';  // ← friend's name
+// ── Battle players — set via header inputs, per run ──
+let BATTLE_PLAYER_1 = 'Player 1';
+let BATTLE_PLAYER_2 = 'Player 2';
 
 let team       = new Array(6).fill(null);
 let rolling    = false;
@@ -1375,6 +1392,8 @@ function buildGistPayload() {
   cached[runKey] = {
     journal: journalEntries,
     teamCount: teamCount,
+    p1: BATTLE_PLAYER_1,
+    p2: BATTLE_PLAYER_2,
   };
   // Store back to local cache
   saveData('soullink_gist_cache', cached);
@@ -1421,13 +1440,22 @@ function applyRunData(remote, run) {
       teamCountInput.value = teamCount;
       saveData('soullink_team_count', teamCount);
     }
+    setPlayerNames(runData.p1 || 'Player 1', runData.p2 || 'Player 2');
   } else {
     // No data for this run yet — start fresh
     journalEntries = [];
     saveData('soullink_journal', []);
+    setPlayerNames('Player 1', 'Player 2');
   }
   updateJournalBadge();
   if (journalOpen) renderJournalEntries();
+}
+
+function setPlayerNames(p1, p2) {
+  BATTLE_PLAYER_1 = p1;
+  BATTLE_PLAYER_2 = p2;
+  document.getElementById('p1-name-input').value = p1;
+  document.getElementById('p2-name-input').value = p2;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2868,6 +2896,29 @@ if (existingToken) {
 // Stop modal content clicks from propagating to document close listeners
 document.getElementById('token-modal').addEventListener('pointerdown', e => e.stopPropagation());
 tokenBackdrop.addEventListener('pointerdown', e => e.stopPropagation());
+
+// ── Player name inputs ──
+const p1Input = document.getElementById('p1-name-input');
+const p2Input = document.getElementById('p2-name-input');
+
+function savePlayerNames() {
+  BATTLE_PLAYER_1 = p1Input.value.trim() || 'Player 1';
+  BATTLE_PLAYER_2 = p2Input.value.trim() || 'Player 2';
+  p1Input.value = BATTLE_PLAYER_1;
+  p2Input.value = BATTLE_PLAYER_2;
+  schedulePush();
+}
+
+p1Input.addEventListener('blur', savePlayerNames);
+p2Input.addEventListener('blur', savePlayerNames);
+p1Input.addEventListener('keydown', e => { if (e.key === 'Enter') p1Input.blur(); });
+p2Input.addEventListener('keydown', e => { if (e.key === 'Enter') p2Input.blur(); });
+p1Input.addEventListener('pointerdown', e => e.stopPropagation());
+p2Input.addEventListener('pointerdown', e => e.stopPropagation());
+
+// Load names for current run from local cache on startup (before gist pull)
+const _cachedRunData = (loadData('soullink_gist_cache') || {})[`run_${currentRun}`];
+if (_cachedRunData?.p1) setPlayerNames(_cachedRunData.p1, _cachedRunData.p2 || 'Player 2');
 
 // ── Init journal ──
 journalEntries = loadJournal();
