@@ -95,19 +95,48 @@
   input[type=number]::-webkit-inner-spin-button,
   input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 
+  /* ── Roll button wrapper ── */
+  #roll-wrap {
+    width: 100%; max-width: min(calc(100vw - 28px), 440px);
+    margin-bottom: 18px; display: flex; flex-direction: column; gap: 0;
+  }
+
   /* ── Roll button ── */
   #roll-btn {
     background: linear-gradient(135deg,#ef4444,#b91c1c);
     color:#fff; font-family:'Press Start 2P',monospace; font-size:11px;
-    padding:14px 36px; border-radius:6px; border:none; cursor:pointer;
+    padding:14px 36px; border-radius:6px 6px 0 0; border:none; cursor:pointer;
     letter-spacing:2px;
-    box-shadow: 0 5px 0 #7f1d1d, 0 0 28px rgba(239,68,68,.4);
-    margin-bottom:18px; transition:transform .1s, background .2s;
+    box-shadow: 0 0 28px rgba(239,68,68,.4);
+    transition:transform .1s, background .2s, box-shadow .2s;
     -webkit-tap-highlight-color:transparent; touch-action:manipulation;
-    width: 100%; max-width: min(calc(100vw - 28px), 440px);
+    width: 100%; position: relative; overflow: hidden;
+    border-bottom: 2px solid #7f1d1d;
   }
-  #roll-btn:active  { transform:scale(.95); }
-  #roll-btn.rolling { background:#1a1a2e; box-shadow:none; opacity:.6; cursor:not-allowed; }
+  #roll-btn.rolling { background:#1a1a2e; box-shadow:none; opacity:.6; cursor:not-allowed; border-bottom-color:#111; }
+  #roll-btn.charging { cursor: pointer; }
+
+  /* ── Charge bar ── */
+  #charge-bar-wrap {
+    width: 100%; height: 6px; background: #0e0e1e;
+    border-radius: 0 0 6px 6px;
+    border: 1px solid #1e1e38; border-top: none;
+    overflow: hidden;
+    box-shadow: 0 4px 0 #000;
+  }
+  #charge-bar {
+    height: 100%; width: 0%; background: #ef4444;
+    border-radius: 0 0 6px 6px;
+    transition: width linear;
+    box-shadow: 0 0 10px #ef4444cc;
+  }
+  #charge-bar.full { background: #fff; box-shadow: 0 0 18px #ffffffcc; }
+
+  @keyframes chargePulse {
+    0%,100% { box-shadow: 0 0 28px rgba(239,68,68,.4); }
+    50%      { box-shadow: 0 0 55px rgba(239,68,68,.85), 0 0 90px rgba(239,68,68,.3); }
+  }
+  #roll-btn.charging { animation: chargePulse .5s ease-in-out infinite; }
 
   /* ── Number grid ── */
   #num-grid {
@@ -522,7 +551,10 @@
   <label for="pool-input">MON</label>
 </div>
 
-<button id="roll-btn">▶  RANDOMIZE TEAM</button>
+<div id="roll-wrap">
+  <button id="roll-btn">▶  RANDOMIZE TEAM</button>
+  <div id="charge-bar-wrap"><div id="charge-bar"></div></div>
+</div>
 
 <div id="num-grid"></div>
 
@@ -988,6 +1020,9 @@ function roll() {
   rolling = true;
   hideRuleBox();
   clearAllShiny();
+  // Reset charge bar
+  const cb = document.getElementById('charge-bar');
+  cb.style.transition = 'none'; cb.style.width = '0%'; cb.classList.remove('full');
 
   rollShinySlots();
 
@@ -1359,7 +1394,93 @@ function splitCSVLine(line) {
 buildGrid();
 renderCards(team, false);
 
-document.getElementById('roll-btn').addEventListener('click', roll);
+// ─────────────────────────────────────────────────────────────────────────────
+// Hold-to-roll charge ritual (2 seconds)
+// ─────────────────────────────────────────────────────────────────────────────
+const CHARGE_MS = 2000;
+const rollBtn   = document.getElementById('roll-btn');
+const chargeBar = document.getElementById('charge-bar');
+
+let chargeTimer   = null;
+let chargeStart   = null;
+let chargeRafId   = null;
+
+function sfxChargeTick(progress) {
+  // Rising pitch beep as charge builds
+  const freq = 200 + progress * 900;
+  const vol  = 0.04 + progress * 0.06;
+  playNote(freq, 0, 0.06, vol, 'square');
+}
+
+function sfxChargeAbort() {
+  playNote(200, 0, 0.15, 0.07, 'sawtooth', 350);
+}
+
+function startCharge() {
+  if (rolling) return;
+  initAudio();
+  chargeStart = performance.now();
+  rollBtn.classList.add('charging');
+  chargeBar.style.transition = 'none';
+  chargeBar.style.width = '0%';
+  chargeBar.classList.remove('full');
+
+  let lastBeep = 0;
+  function frame(now) {
+    const elapsed  = now - chargeStart;
+    const progress = Math.min(elapsed / CHARGE_MS, 1);
+    chargeBar.style.width = (progress * 100) + '%';
+
+    // Tick SFX every ~200ms, accelerating
+    const beepInterval = 200 - progress * 140;
+    if (now - lastBeep > beepInterval) {
+      sfxChargeTick(progress);
+      lastBeep = now;
+    }
+
+    // Label stages
+    if (progress < 0.4)      rollBtn.textContent = '▶  HOLD TO ROLL...';
+    else if (progress < 0.8) rollBtn.textContent = '▶▶ CHARGING...';
+    else                      rollBtn.textContent = '▶▶▶ ALMOST!';
+
+    if (progress < 1) {
+      chargeRafId = requestAnimationFrame(frame);
+    } else {
+      // Fully charged — fire!
+      chargeBar.classList.add('full');
+      chargeBar.style.width = '100%';
+      rollBtn.textContent   = '▶  RANDOMIZE TEAM';
+      rollBtn.classList.remove('charging');
+      chargeStart = null;
+      roll();
+    }
+  }
+  chargeRafId = requestAnimationFrame(frame);
+}
+
+function cancelCharge() {
+  if (!chargeStart) return;
+  cancelAnimationFrame(chargeRafId);
+  chargeStart = null;
+  sfxChargeAbort();
+  rollBtn.classList.remove('charging');
+  rollBtn.textContent = '▶  RANDOMIZE TEAM';
+  // Drain the bar
+  chargeBar.style.transition = 'width .35s ease';
+  chargeBar.style.width = '0%';
+  chargeBar.classList.remove('full');
+}
+
+rollBtn.addEventListener('pointerdown', (e) => {
+  if (e.button !== undefined && e.button !== 0) return;
+  if (rolling) return;
+  e.preventDefault();
+  rollBtn.setPointerCapture(e.pointerId);
+  startCharge();
+});
+rollBtn.addEventListener('pointerup',    cancelCharge);
+rollBtn.addEventListener('pointerleave', cancelCharge);
+rollBtn.addEventListener('pointercancel', cancelCharge);
 
 document.getElementById('pool-input').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') roll();
