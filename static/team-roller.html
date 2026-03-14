@@ -920,7 +920,7 @@
 
   /* ── Sync status pill ── */
   #sync-pill {
-    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+    position: fixed; bottom: 54px; left: 50%;
     background: #12122a; border: 1px solid #252545; border-radius: 20px;
     font-size: 6px; letter-spacing: 1px; padding: 5px 12px;
     z-index: 300; pointer-events: none; cursor: default;
@@ -930,14 +930,41 @@
     white-space: nowrap;
   }
   #sync-pill.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  #sync-pill.syncing { border-color: #a78bfa44; color: #a78bfa; pointer-events: auto; cursor: pointer; }
-  #sync-pill.syncing:hover { border-color: #ef444466; color: #ef4444; }
+  #sync-pill.syncing { border-color: #a78bfa44; color: #a78bfa; }
   #sync-pill.done    { border-color: #22c55e44; color: #22c55e; }
   #sync-pill.error   { border-color: #ef444455; color: #ef4444; }
   #sync-dot {
     width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0;
   }
   #sync-pill.syncing #sync-dot { animation: flash .6s linear infinite; }
+
+  /* ── Sync bottom bar ── */
+  #sync-bar {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 6px; z-index: 299;
+    white-space: nowrap;
+  }
+  #sync-bar.hidden { display: none; }
+  #sync-now-btn, #pause-sync-btn, #disconnect-btn {
+    font-family: 'Press Start 2P', monospace; font-size: 6px;
+    background: #12122a; border-radius: 20px; padding: 5px 12px; cursor: pointer;
+    letter-spacing: 1px; border: 1px solid; transition: border-color .2s, color .2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  #sync-now-btn { color: #444466; border-color: #252545; }
+  #sync-now-btn:hover { border-color: #a78bfa44; color: #a78bfa; }
+  #sync-now-btn.has-pending { color: #a78bfa; border-color: #a78bfa44; }
+  #sync-now-dot {
+    width: 5px; height: 5px; border-radius: 50%; background: currentColor;
+    flex-shrink: 0; display: none;
+  }
+  #sync-now-btn.has-pending #sync-now-dot { display: block; }
+  #pause-sync-btn { color: #2a2a44; border-color: #1e1e38; }
+  #pause-sync-btn:hover { color: #888866; border-color: #444433; }
+  #pause-sync-btn.paused { color: #c8a44a; border-color: #c8a44a44; }
+  #pause-sync-btn.paused:hover { color: #f0c060; border-color: #f0c06044; }
+  #disconnect-btn { color: #2a2a44; border-color: #1e1e38; }
+  #disconnect-btn:hover { color: #555577; border-color: #333355; }
 
   /* ── Run selector in journal ── */
   #run-number-input {
@@ -1010,6 +1037,13 @@
 
 <!-- Sync status pill -->
 <div id="sync-pill"><div id="sync-dot"></div><span id="sync-label">SYNCING</span></div>
+
+<!-- Sync bottom bar -->
+<div id="sync-bar" class="hidden">
+  <button id="sync-now-btn"><div id="sync-now-dot"></div>SYNC</button>
+  <button id="pause-sync-btn">PAUSE AUTO</button>
+  <button id="disconnect-btn">REMOVE SYNC</button>
+</div>
 
 <!-- Journal button -->
 <button id="journal-btn" title="Run journal">
@@ -1306,15 +1340,54 @@ function loadData(key) {
 // ─────────────────────────────────────────────────────────────────────────────
 const syncPill  = document.getElementById('sync-pill');
 const syncLabel = document.getElementById('sync-label');
+const syncBar   = document.getElementById('sync-bar');
+const syncNowBtn    = document.getElementById('sync-now-btn');
+const pauseSyncBtn  = document.getElementById('pause-sync-btn');
+const disconnectBtn = document.getElementById('disconnect-btn');
 let syncHideTimer = null;
 
-syncPill.addEventListener('pointerdown', (e) => {
-  if (!syncPill.classList.contains('syncing')) return;
+// Pending change tracking
+let hasPendingChanges = false;
+let autoSyncTimer = null;
+let autoSyncPaused = localStorage.getItem('soullink_autosync_paused') === 'true';
+
+function updateSyncBar() {
+  syncBar.classList.toggle('hidden', !getToken());
+  syncNowBtn.classList.toggle('has-pending', hasPendingChanges && !autoSyncPaused);
+  pauseSyncBtn.classList.toggle('paused', autoSyncPaused);
+  pauseSyncBtn.textContent = autoSyncPaused ? 'RESUME AUTO' : 'PAUSE AUTO';
+}
+
+pauseSyncBtn.addEventListener('pointerdown', (e) => {
   e.preventDefault();
-  clearTimeout(syncTimer);
+  autoSyncPaused = !autoSyncPaused;
+  localStorage.setItem('soullink_autosync_paused', autoSyncPaused);
+  if (autoSyncPaused) {
+    clearTimeout(autoSyncTimer);
+    autoSyncTimer = null;
+  } else if (hasPendingChanges && !autoSyncTimer) {
+    autoSyncTimer = setTimeout(() => {
+      autoSyncTimer = null;
+      if (hasPendingChanges && !autoSyncPaused) pushToGist();
+    }, 5 * 60 * 1000);
+  }
+  updateSyncBar();
+});
+
+syncNowBtn.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  pushToGist();
+});
+
+disconnectBtn.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  clearTimeout(autoSyncTimer);
+  autoSyncTimer = null;
+  hasPendingChanges = false;
   sessionStorage.removeItem('soullink_gh_token');
   localStorage.removeItem('soullink_gh_token');
   syncPill.classList.remove('show');
+  updateSyncBar();
   tokenBackdrop.classList.remove('hidden');
 });
 
@@ -1362,23 +1435,34 @@ async function gistFetch(payload = null) {
   return raw ? JSON.parse(raw) : {};
 }
 
-// Debounced push
-let syncTimer = null;
+// Mark pending changes; auto-sync once after 5 min if not manually synced
 function schedulePush() {
   if (!getToken()) return;
-  clearTimeout(syncTimer);
-  showSync('syncing');
-  syncTimer = setTimeout(pushToGist, 1700);
+  hasPendingChanges = true;
+  updateSyncBar();
+  if (!autoSyncPaused && !autoSyncTimer) {
+    autoSyncTimer = setTimeout(() => {
+      autoSyncTimer = null;
+      if (hasPendingChanges && !autoSyncPaused) pushToGist();
+    }, 5 * 60 * 1000);
+  }
 }
 
 async function pushToGist() {
   const token = getToken();
   if (!token) { syncPill.classList.remove('show'); return; }
+  hasPendingChanges = false;
+  clearTimeout(autoSyncTimer);
+  autoSyncTimer = null;
+  updateSyncBar();
+  showSync('syncing', 'SYNCING');
   try {
     const payload = buildGistPayload();
     await gistFetch(payload);
     showSync('done');
   } catch(e) {
+    hasPendingChanges = true;
+    updateSyncBar();
     showSync('error', 'SYNC FAILED');
     console.error('Gist push failed:', e);
   }
@@ -2875,6 +2959,7 @@ tokenConfirmBtn.addEventListener('pointerdown', async (e) => {
   if (!tok) { tokenInput.focus(); return; }
   setToken(tok, tokenRemember.checked);
   closeTokenModal();
+  updateSyncBar();
   await pullFromGist();
 });
 
@@ -2889,6 +2974,7 @@ if (existingToken) {
   tokenInput.value = existingToken;
   tokenRemember.checked = !!localStorage.getItem('soullink_gh_token');
   closeTokenModal();
+  updateSyncBar();
 } else {
   // Show modal — prevent backdrop close via document pointerdown
   tokenBackdrop.addEventListener('pointerdown', (e) => {
