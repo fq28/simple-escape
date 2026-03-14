@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Elden Ring Weapon Roller</title>
+<link rel="icon" type="image/png" href="favi.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet"/>
+<script src="er-weapons-db.js"></script>
+<script src="er-aow-db.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #f0d080;
+    --gold-dim: #7a6130;
+    --bg: #0b0b0f;
+    --bg2: #111118;
+    --bg3: #1a1a24;
+    --text: #e8dfc0;
+    --text-dim: #8a7f60;
+    --red: #c0392b;
+    --red-bright: #e74c3c;
+    --green: #27ae60;
+    --green-bright: #2ecc71;
+    --glow-gold: 0 0 20px rgba(201,168,76,0.6), 0 0 40px rgba(201,168,76,0.3);
+    --glow-red: 0 0 20px rgba(192,57,43,0.8), 0 0 40px rgba(192,57,43,0.4);
+    --border: 1px solid rgba(201,168,76,0.25);
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Cinzel', serif;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Subtle background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse at 50% 100%, rgba(80,20,20,0.15) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── TOP BAR ─────────────────────────────────── */
+  #topbar {
+    position: relative;
+    z-index: 10;
+    padding: 10px 14px 8px;
+    border-bottom: var(--border);
+    background: rgba(11,11,15,0.95);
+    flex-shrink: 0;
+  }
+
+  #search-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  /* Mode toggle pill */
+  #search-mode-toggle {
+    display: flex;
+    border: 1px solid var(--gold-dim);
+    border-radius: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .mode-pill {
+    padding: 0 10px;
+    height: 42px;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .mode-pill.active {
+    background: rgba(201,168,76,0.18);
+    color: var(--gold-light);
+  }
+
+  #search-input {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--gold-dim);
+    color: var(--text);
+    font-family: 'Cinzel', serif;
+    font-size: clamp(11px, 2.5vw, 14px);
+    padding: 10px 14px;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  #search-input::placeholder { color: var(--text-dim); }
+  #search-input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 12px rgba(201,168,76,0.2);
+  }
+
+  #add-btn {
+    background: var(--gold-dim);
+    border: 1px solid var(--gold);
+    color: var(--gold-light);
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    width: 42px;
+    height: 42px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s, box-shadow 0.2s;
+    flex-shrink: 0;
+  }
+  #add-btn:hover { background: #5a4520; box-shadow: var(--glow-gold); }
+
+  /* Autocomplete dropdown */
+  #autocomplete {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 14px;
+    right: 14px;
+    max-width: 520px;
+    margin: 0 auto;
+    background: var(--bg3);
+    border: 1px solid var(--gold-dim);
+    border-radius: 4px;
+    z-index: 100;
+    max-height: 220px;
+    overflow-y: auto;
+    display: none;
+  }
+  #autocomplete.open { display: block; }
+
+  .ac-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: clamp(10px, 2.2vw, 12px);
+    border-bottom: 1px solid rgba(201,168,76,0.1);
+    transition: background 0.15s;
+  }
+  .ac-item:last-child { border-bottom: none; }
+  .ac-item:hover, .ac-item.selected { background: rgba(201,168,76,0.12); }
+  .ac-item img {
+    width: 32px; height: 32px;
+    object-fit: contain;
+    flex-shrink: 0;
+    filter: brightness(0.9);
+  }
+  .ac-name { flex: 1; color: var(--text); }
+  .ac-cat { color: var(--text-dim); font-size: 10px; }
+  .ac-owned { color: var(--gold-dim); font-size: 10px; }
+
+  /* ─── MAIN AREA ────────────────────────────────── */
+  #main {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 1;
+    padding: 12px 16px;
+  }
+
+  /* ─── SLOT MACHINE REEL ─────────────────────────── */
+  #reel-container {
+    width: 100%;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  #reel-window {
+    width: 200px;
+    height: 200px;
+    border: 2px solid var(--gold-dim);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg2);
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+  }
+
+  #reel-track {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: absolute;
+    width: 100%;
+    will-change: transform;
+  }
+
+  .reel-item {
+    width: 200px;
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-shrink: 0;
+    padding: 10px;
+  }
+
+  .reel-item img {
+    width: 110px;
+    height: 110px;
+    object-fit: contain;
+    filter: brightness(0.85);
+  }
+
+  .reel-item .reel-name {
+    font-size: 9px;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.4;
+    max-width: 170px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  /* Reel top/bottom fade */
+  #reel-window::before, #reel-window::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    height: 50px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  #reel-window::before {
+    top: 0;
+    background: linear-gradient(to bottom, var(--bg2), transparent);
+  }
+  #reel-window::after {
+    bottom: 0;
+    background: linear-gradient(to top, var(--bg2), transparent);
+  }
+
+  /* ─── IDLE STATE ─────────────────────────────────── */
+  #idle-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+  }
+
+  #idle-icon {
+    font-size: 60px;
+    opacity: 0.3;
+  }
+
+  #idle-text {
+    font-size: clamp(10px, 2.5vw, 12px);
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+
+  /* ─── RESULT STATE ──────────────────────────────── */
+  #result-state {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    animation: resultIn 0.5s ease-out;
+    margin-bottom: 6px;
+  }
+
+  @keyframes resultIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  #result-frame {
+    position: relative;
+    width: clamp(180px, 50vw, 220px);
+    height: clamp(180px, 50vw, 220px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #result-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 20px rgba(201,168,76,0.7)) drop-shadow(0 0 40px rgba(201,168,76,0.3));
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-8px); }
+  }
+
+  /* Corner decorations */
+  #result-frame::before, #result-frame::after {
+    content: '';
+    position: absolute;
+    width: 28px; height: 28px;
+    border-color: var(--gold);
+    border-style: solid;
+    background: transparent;
+  }
+  #result-frame::before {
+    top: -5px; left: -5px;
+    border-width: 3px 0 0 3px;
+    filter: drop-shadow(-2px -2px 6px rgba(201,168,76,0.5));
+  }
+  #result-frame::after {
+    bottom: -5px; right: -5px;
+    border-width: 0 3px 3px 0;
+    filter: drop-shadow(2px 2px 6px rgba(201,168,76,0.5));
+  }
+
+  #result-name {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(13px, 4vw, 20px);
+    color: var(--gold-light);
+    text-align: center;
+    text-shadow: var(--glow-gold);
+    letter-spacing: 0.05em;
+    line-height: 1.3;
+    max-width: 300px;
+    animation: nameGlow 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes nameGlow {
+    from { text-shadow: 0 0 10px rgba(201,168,76,0.4); }
+    to   { text-shadow: 0 0 20px rgba(240,208,128,0.8), 0 0 40px rgba(201,168,76,0.4); }
+  }
+
+  #result-category {
+    font-size: clamp(9px, 2vw, 11px);
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* ─── FATE BUTTONS ──────────────────────────────── */
+  #fate-btns {
+    display: none;
+    gap: 16px;
+    width: 100%;
+    max-width: 320px;
+    margin-top: 8px;
+    padding: 0 4px;
+  }
+  #fate-btns.visible { display: flex; }
+
+  .fate-btn {
+    flex: 1;
+    padding: 16px 10px;
+    border-radius: 6px;
+    font-family: 'Cinzel', serif;
+    font-size: clamp(12px, 3vw, 15px);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    border: 2px solid;
+    transition: all 0.22s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .fate-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.22s;
+  }
+  .fate-btn:hover::before { opacity: 1; }
+  .fate-btn .fate-icon { font-size: 22px; }
+
+  #btn-keep {
+    background: rgba(39,174,96,0.08);
+    border-color: var(--green);
+    color: var(--green-bright);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  }
+  #btn-keep::before { background: linear-gradient(135deg, rgba(39,174,96,0.15), transparent); }
+  #btn-keep:hover { box-shadow: 0 0 20px rgba(39,174,96,0.5), 0 0 40px rgba(39,174,96,0.2); transform: translateY(-1px); }
+  #btn-keep:active { transform: scale(0.97); }
+
+  #btn-lose {
+    background: rgba(192,57,43,0.08);
+    border-color: var(--red);
+    color: var(--red-bright);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  }
+  #btn-lose::before { background: linear-gradient(135deg, rgba(192,57,43,0.15), transparent); }
+  #btn-lose:hover { box-shadow: var(--glow-red); transform: translateY(-1px); }
+  #btn-lose:active { transform: scale(0.97); }
+
+  /* ─── ROLL BUTTON ───────────────────────────────── */
+  #roll-btn {
+    width: 100%;
+    max-width: 320px;
+    padding: clamp(14px, 3vh, 18px) 20px;
+    background: linear-gradient(135deg, #2a1f08, #3d2e0e);
+    border: 2px solid var(--gold);
+    border-radius: 6px;
+    color: var(--gold-light);
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(13px, 3.5vw, 16px);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    margin-top: 16px;
+  }
+
+  #roll-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 0%, rgba(201,168,76,0.1) 50%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  #roll-btn:hover:not(:disabled)::before { opacity: 1; }
+  #roll-btn:hover:not(:disabled) {
+    box-shadow: var(--glow-gold);
+    border-color: var(--gold-light);
+    transform: translateY(-1px);
+  }
+  #roll-btn:active:not(:disabled) { transform: translateY(0); }
+  #roll-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: var(--gold-dim);
+  }
+
+  #roll-btn.rolling {
+    animation: rollPulse 0.4s ease-in-out infinite alternate;
+  }
+  @keyframes rollPulse {
+    from { box-shadow: 0 0 10px rgba(201,168,76,0.3); }
+    to   { box-shadow: 0 0 30px rgba(201,168,76,0.7), 0 0 60px rgba(201,168,76,0.3); }
+  }
+
+  #roll-empty-msg {
+    font-size: clamp(9px, 2vw, 11px);
+    color: var(--red-bright);
+    text-align: center;
+    display: none;
+    letter-spacing: 0.05em;
+  }
+
+  /* ─── BOTTOM BAR ────────────────────────────────── */
+  #bottombar {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    border-top: var(--border);
+    background: rgba(11,11,15,0.95);
+    flex-shrink: 0;
+  }
+
+  .inventory-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: 1px solid var(--gold-dim);
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 80px;
+    position: relative;
+  }
+  .inventory-btn:hover { border-color: var(--gold); color: var(--text); }
+  .inventory-btn .inv-icon { font-size: 22px; }
+
+  .inv-count {
+    position: absolute;
+    top: -6px; right: -6px;
+    background: var(--gold);
+    color: #000;
+    font-size: 9px;
+    font-weight: 700;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cinzel', serif;
+  }
+
+  #btn-box .inv-count {
+    background: #8b0000;
+    color: #fff;
+  }
+
+  /* ─── PANEL OVERLAY ──────────────────────────────── */
+  .panel-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .panel-overlay.open {
+    display: flex;
+    animation: overlayIn 0.2s ease-out;
+  }
+  @keyframes overlayIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .panel {
+    background: var(--bg2);
+    border: var(--border);
+    border-bottom: none;
+    border-radius: 16px 16px 0 0;
+    width: 100%;
+    max-width: 520px;
+    max-height: 75dvh;
+    display: flex;
+    flex-direction: column;
+    animation: panelUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes panelUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: var(--border);
+    flex-shrink: 0;
+  }
+
+  .panel-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(16px, 4.5vw, 20px);
+    color: var(--gold-light);
+    letter-spacing: 0.08em;
+  }
+
+  .panel-close {
+    background: none;
+    border: 1px solid var(--gold-dim);
+    color: var(--text-dim);
+    font-size: 16px;
+    width: 30px; height: 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .panel-close:hover { border-color: var(--gold); color: var(--text); }
+
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Custom scrollbar */
+  .panel-body::-webkit-scrollbar { width: 4px; }
+  .panel-body::-webkit-scrollbar-track { background: transparent; }
+  .panel-body::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+
+  .weapon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 12px;
+  }
+
+  .weapon-card {
+    background: var(--bg3);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 6px;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    text-align: center;
+  }
+  .weapon-card:hover { border-color: var(--gold-dim); background: rgba(201,168,76,0.05); }
+
+  .weapon-card img {
+    width: 64px; height: 64px;
+    object-fit: contain;
+    filter: brightness(0.9);
+    pointer-events: none;
+  }
+  .weapon-card .wc-name {
+    font-size: 11px;
+    color: var(--text);
+    line-height: 1.5;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    pointer-events: none;
+  }
+  .weapon-card .wc-remove {
+    position: absolute;
+    top: 4px; right: 4px;
+    width: 22px; height: 22px;
+    background: rgba(140,20,10,0.7);
+    border: 1px solid rgba(255,80,60,0.35);
+    border-radius: 50%;
+    color: rgba(255,180,160,0.9);
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s;
+    z-index: 10;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .weapon-card .wc-remove:hover,
+  .weapon-card .wc-remove:active { background: rgba(220,30,20,0.95); color: #fff; }
+
+  .panel-empty {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 11px;
+    padding: 40px 20px;
+    line-height: 2;
+  }
+
+  /* ─── BOX PANEL (red theme) ──────────────────────── */
+  #panel-box .panel-title { color: #e8a0a0; }
+  #panel-box .panel { border-color: rgba(192,57,43,0.3); }
+
+  .box-weapon-card {
+    background: rgba(60,8,8,0.4);
+    border-color: rgba(192,57,43,0.25);
+    padding-bottom: 6px;
+  }
+  .box-weapon-card:hover { border-color: rgba(192,57,43,0.6); background: rgba(80,10,10,0.5); }
+
+  .retrieve-btn {
+    width: 100%;
+    margin-top: 4px;
+    padding: 7px 4px;
+    background: rgba(201,168,76,0.08);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 4px;
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .retrieve-btn:hover,
+  .retrieve-btn:active {
+    background: rgba(201,168,76,0.2);
+    border-color: var(--gold);
+    color: var(--gold-light);
+  }
+
+  /* ─── BAG: MOVE-TO-BOX MODE ──────────────────────── */
+  .panel-mode-btn {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.18s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #bag-move-mode-btn {
+    border-color: var(--gold-dim);
+    background: transparent;
+    color: var(--text-dim);
+  }
+  #bag-move-mode-btn.active {
+    border-color: var(--red);
+    background: rgba(192,57,43,0.15);
+    color: var(--red-bright);
+  }
+
+  .weapon-card.move-mode {
+    border-color: rgba(192,57,43,0.3);
+    cursor: pointer;
+  }
+  .weapon-card.move-mode:hover {
+    border-color: rgba(192,57,43,0.7);
+    background: rgba(192,57,43,0.1);
+  }
+  .weapon-card.move-mode .wc-remove { display: none !important; }
+  .move-mode-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 6px;
+    pointer-events: none;
+    border-radius: 6px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .weapon-card.move-mode:hover .move-mode-overlay {
+    opacity: 1;
+  }
+  .move-mode-label {
+    font-size: 9px;
+    font-family: 'Cinzel', serif;
+    color: var(--red-bright);
+    letter-spacing: 0.06em;
+    background: rgba(0,0,0,0.7);
+    padding: 3px 6px;
+    border-radius: 3px;
+  }
+
+  /* ─── TOAST ─────────────────────────────────────── */
+  #toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg3);
+    border: 1px solid var(--gold-dim);
+    color: var(--text);
+    font-size: 11px;
+    padding: 10px 18px;
+    border-radius: 20px;
+    z-index: 500;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    white-space: nowrap;
+    letter-spacing: 0.05em;
+  }
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ─── ROLLING OVERLAY ──────────────────────────────── */
+  #rolling-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    background: var(--bg);
+  }
+  #rolling-overlay.active { display: flex; }
+
+  /* ─── CONFIRM DIALOG ─────────────────────────────── */
+  #confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 300;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #confirm-overlay.open { display: flex; }
+
+  #confirm-box {
+    background: var(--bg2);
+    border: 1px solid var(--gold-dim);
+    border-radius: 8px;
+    padding: 24px;
+    max-width: 320px;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  #confirm-msg {
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--text);
+  }
+  #confirm-msg strong { color: var(--gold-light); }
+  .confirm-btns { display: flex; gap: 10px; }
+  .confirm-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 4px;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 2px solid;
+    transition: all 0.2s;
+  }
+  #confirm-yes {
+    background: rgba(192,57,43,0.1);
+    border-color: var(--red);
+    color: var(--red-bright);
+  }
+  #confirm-yes:hover { background: rgba(192,57,43,0.25); }
+  #confirm-no {
+    background: var(--bg3);
+    border-color: var(--gold-dim);
+    color: var(--text-dim);
+  }
+  #confirm-no:hover { border-color: var(--gold); color: var(--text); }
+
+  /* ─── MISC ────────────────────────────────────────── */
+  .divider {
+    width: 60%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
+    margin: 4px 0;
+  }
+
+  @media (min-height: 700px) {
+    #reel-window { width: 220px; height: 220px; }
+    .reel-item { width: 220px; height: 220px; }
+    .reel-item img { width: 130px; height: 130px; }
+    #result-frame { width: 240px; height: 240px; }
+  }
+
+  /* ─── AOW OVERLAY (result corner) ───────────────── */
+  #aow-overlay {
+    position: absolute;
+    bottom: -12px; right: -12px;
+    background: rgba(11,11,15,0.93);
+    border: 1px solid rgba(120,80,220,0.55);
+    border-radius: 7px;
+    padding: 5px 7px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    width: 80px;
+    z-index: 5;
+    box-shadow: 0 0 16px rgba(100,60,200,0.4);
+    animation: aowIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  #aow-overlay.visible { display: flex; }
+  @keyframes aowIn {
+    from { opacity: 0; transform: scale(0.7) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .aow-ol-label {
+    font-size: 7px;
+    font-family: 'Cinzel', serif;
+    color: rgba(170,150,230,0.65);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  #aow-overlay img {
+    width: 40px; height: 40px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 6px rgba(130,90,255,0.75));
+  }
+  .aow-ol-name {
+    font-size: 8px;
+    font-family: 'Cinzel', serif;
+    color: #c4b0ff;
+    text-align: center;
+    line-height: 1.3;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  /* ─── AOW PANEL ──────────────────────────────────── */
+  #btn-aow .inv-count { background: #5030a0; }
+  .aow-card {
+    background: rgba(20,10,42,0.55) !important;
+    border-color: rgba(120,80,220,0.22) !important;
+  }
+  .aow-card:hover {
+    border-color: rgba(150,100,255,0.6) !important;
+    background: rgba(38,18,76,0.65) !important;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div id="search-container">
+    <div id="search-mode-toggle">
+      <button class="mode-pill active" id="pill-weapons">Weapons</button>
+      <button class="mode-pill" id="pill-ashes">Ashes</button>
+    </div>
+    <input id="search-input" type="text" placeholder="Find a weapon to add..." autocomplete="off" autocorrect="off" spellcheck="false"/>
+    <button id="add-btn" title="Add">＋</button>
+    <div id="autocomplete"></div>
+  </div>
+</div>
+
+<!-- MAIN AREA -->
+<div id="main">
+
+  <!-- Rolling animation overlay -->
+  <div id="rolling-overlay">
+    <div id="reel-window">
+      <div id="reel-track"></div>
+    </div>
+  </div>
+
+  <!-- Idle state -->
+  <div id="idle-state">
+    <div id="idle-icon">⚔️</div>
+    <div class="divider"></div>
+    <div id="idle-text">Add weapons to your bag<br>then roll your fate</div>
+  </div>
+
+  <!-- Result state -->
+  <div id="result-state">
+    <div id="result-frame">
+      <img id="result-img" src="" alt=""/>
+      <div id="aow-overlay">
+        <div class="aow-ol-label">Ash of War</div>
+        <img id="aow-overlay-img" src="" alt=""/>
+        <div class="aow-ol-name" id="aow-overlay-name"></div>
+      </div>
+    </div>
+    <div id="result-name"></div>
+    <div id="result-category"></div>
+  </div>
+
+  <div id="fate-btns">
+    <button class="fate-btn" id="btn-lose">
+      Lost
+    </button>
+    <button class="fate-btn" id="btn-keep">
+      Kept
+    </button>
+  </div>
+
+  <div id="roll-empty-msg">Your bag is empty — add weapons first</div>
+
+  <button id="roll-btn">✦ FATE ✦</button>
+
+</div>
+
+<!-- BOTTOM BAR -->
+<div id="bottombar">
+  <button class="inventory-btn" id="btn-bag">
+    <span class="inv-icon">🎒</span>
+    BAG
+    <span class="inv-count" id="bag-count">0</span>
+  </button>
+  <button class="inventory-btn" id="btn-aow">
+    <span class="inv-icon">✨</span>
+    ASHES
+    <span class="inv-count" id="aow-count">0</span>
+  </button>
+  <button class="inventory-btn" id="btn-box">
+    <span class="inv-icon">📦</span>
+    BOX
+    <span class="inv-count" id="box-count">0</span>
+  </button>
+</div>
+
+<!-- BAG PANEL -->
+<div class="panel-overlay" id="panel-bag">
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Your Bag</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="panel-mode-btn" id="bag-move-mode-btn" title="Move weapons to box">📦 Box Mode</button>
+        <button class="panel-close" id="close-bag">✕</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="weapon-grid" id="bag-grid"></div>
+      <div class="panel-empty" id="bag-empty" style="display:none">
+        No weapons in your bag.<br>Use the search bar to add some.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AOW PANEL -->
+<div class="panel-overlay" id="panel-aow">
+  <div class="panel" style="border-color: rgba(120,80,220,0.3)">
+    <div class="panel-header">
+      <div class="panel-title" style="color:#c4b0ff">Ashes of War</div>
+      <button class="panel-close" id="close-aow">✕</button>
+    </div>
+    <div class="panel-body">
+      <div class="weapon-grid" id="aow-grid"></div>
+      <div class="panel-empty" id="aow-empty" style="display:none">
+        No ashes in your bag.<br>Switch to Ashes mode in the search bar to add some.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOX PANEL -->
+<div class="panel-overlay" id="panel-box">
+  <div class="panel" style="border-color: rgba(192,57,43,0.3)">
+    <div class="panel-header">
+      <div class="panel-title" style="color:#e8a0a0">The Box</div>
+      <button class="panel-close" id="close-box">✕</button>
+    </div>
+    <div class="panel-body">
+      <div class="weapon-grid" id="box-grid"></div>
+      <div class="panel-empty" id="box-empty" style="display:none">
+        Nothing lost yet.<br>Keep your blades close.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div id="confirm-overlay">
+  <div id="confirm-box">
+    <div id="confirm-msg"></div>
+    <div class="confirm-btns">
+      <button class="confirm-btn" id="confirm-no">Cancel</button>
+      <button class="confirm-btn" id="confirm-yes">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────
+const STATE_KEY = 'er_roller_v1';
+let state = {
+  bag: [],      // weapon ids in bag
+  box: [],      // weapon ids in box
+  aow_bag: []   // ash of war ids
+};
+
+function saveState() {
+  localStorage.setItem(STATE_KEY, JSON.stringify(state));
+}
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STATE_KEY));
+    if (s) {
+      state = s;
+      if (!state.aow_bag) state.aow_bag = []; // migrate old saves
+    }
+  } catch(e) {}
+}
+
+// ─── WEAPON DATABASE ─────────────────────────────────
+let ALL_WEAPONS = [];
+let weaponById = {};
+
+function loadWeapons() {
+  ER_WEAPONS.forEach(w => {
+    ALL_WEAPONS.push(w);
+    weaponById[w.id] = w;
+  });
+}
+
+// ─── ASH DATABASE ────────────────────────────────────
+let ashById = {};
+
+function loadAshes() {
+  ER_ASHES.forEach(a => { ashById[a.id] = a; });
+}
+
+function searchAshes(query) {
+  if (!query.trim()) return [];
+  const results = [];
+  for (const a of ER_ASHES) {
+    const score = fuzzyScore(query, a.name);
+    if (score > 0) results.push({ a, score });
+  }
+  results.sort((x, y) => y.score - x.score);
+  return results.slice(0, 8).map(r => r.a);
+}
+
+// ─── FUZZY SEARCH ────────────────────────────────────
+function fuzzyScore(query, target) {
+  const q = query.toLowerCase();
+  const t = target.toLowerCase();
+  if (t.startsWith(q)) return 1000;
+  if (t.includes(q)) return 500;
+  // character subsequence
+  let qi = 0;
+  let score = 0;
+  for (let ti = 0; ti < t.length && qi < q.length; ti++) {
+    if (t[ti] === q[qi]) { score += 10; qi++; }
+  }
+  return qi === q.length ? score : 0;
+}
+
+function searchWeapons(query) {
+  if (!query.trim()) return [];
+  const results = [];
+  for (const w of ALL_WEAPONS) {
+    const score = fuzzyScore(query, w.name);
+    if (score > 0) results.push({ w, score });
+  }
+  results.sort((a, b) => b.score - a.score);
+  return results.slice(0, 8).map(r => r.w);
+}
+
+// ─── AUTOCOMPLETE ─────────────────────────────────────
+const searchInput = document.getElementById('search-input');
+const autocomplete = document.getElementById('autocomplete');
+const addBtn = document.getElementById('add-btn');
+let acResults = [];
+let acSelected = -1;
+let searchMode = 'weapons'; // 'weapons' | 'ashes'
+
+document.getElementById('pill-weapons').addEventListener('click', () => {
+  searchMode = 'weapons';
+  document.getElementById('pill-weapons').classList.add('active');
+  document.getElementById('pill-ashes').classList.remove('active');
+  searchInput.placeholder = 'Find a weapon to add...';
+  closeAC(); searchInput.value = ''; searchInput.focus();
+});
+document.getElementById('pill-ashes').addEventListener('click', () => {
+  searchMode = 'ashes';
+  document.getElementById('pill-ashes').classList.add('active');
+  document.getElementById('pill-weapons').classList.remove('active');
+  searchInput.placeholder = 'Find an ash of war to add...';
+  closeAC(); searchInput.value = ''; searchInput.focus();
+});
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value;
+  acResults = searchMode === 'ashes' ? searchAshes(q) : searchWeapons(q);
+  acSelected = acResults.length > 0 ? 0 : -1;
+  renderAC();
+});
+
+searchInput.addEventListener('keydown', (e) => {
+  if (!autocomplete.classList.contains('open')) return;
+  if (e.key === 'ArrowDown') { acSelected = Math.min(acSelected+1, acResults.length-1); renderAC(); e.preventDefault(); }
+  if (e.key === 'ArrowUp')   { acSelected = Math.max(acSelected-1, 0); renderAC(); e.preventDefault(); }
+  if (e.key === 'Enter') {
+    if (acSelected >= 0) {
+      if (searchMode === 'ashes') addAowById(acResults[acSelected].id);
+      else addWeaponById(acResults[acSelected].id);
+    }
+    e.preventDefault();
+  }
+  if (e.key === 'Escape') { closeAC(); }
+});
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#search-container')) closeAC();
+});
+
+function closeAC() {
+  autocomplete.classList.remove('open');
+  acResults = [];
+}
+
+function renderAC() {
+  autocomplete.innerHTML = '';
+  if (acResults.length === 0) { autocomplete.classList.remove('open'); return; }
+  autocomplete.classList.add('open');
+  acResults.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'ac-item' + (i === acSelected ? ' selected' : '');
+    if (searchMode === 'ashes') {
+      const a = item;
+      const owned = state.aow_bag.includes(a.id);
+      div.innerHTML = `
+        <img src="${a.image}" alt="" loading="lazy" onerror="this.style.opacity=0.2"/>
+        <span class="ac-name">${a.name}</span>
+        <span class="ac-cat">${a.affinity || 'Any'}</span>
+        ${owned ? '<span class="ac-owned">✓ owned</span>' : ''}
+      `;
+      div.addEventListener('click', () => addAowById(a.id));
+    } else {
+      const w = item;
+      const inBag = state.bag.includes(w.id);
+      const inBox = state.box.includes(w.id);
+      div.innerHTML = `
+        <img src="${w.image}" alt="" loading="lazy" onerror="this.style.opacity=0.2"/>
+        <span class="ac-name">${w.name}</span>
+        <span class="ac-cat">${w.category}</span>
+        ${inBag ? '<span class="ac-owned">✓ in bag</span>' : ''}
+        ${inBox ? '<span class="ac-owned" style="color:#c0392b">📦 boxed</span>' : ''}
+      `;
+      div.addEventListener('click', () => addWeaponById(w.id));
+    }
+    autocomplete.appendChild(div);
+  });
+}
+
+addBtn.addEventListener('click', () => {
+  const pick = acSelected >= 0 ? acResults[acSelected] : acResults[0];
+  if (!pick) return;
+  if (searchMode === 'ashes') addAowById(pick.id);
+  else addWeaponById(pick.id);
+});
+
+function addWeaponById(id) {
+  const w = weaponById[id];
+  if (!w) return;
+  if (state.bag.includes(id)) { toast(`${w.name} is already in your bag`); closeAC(); searchInput.value=''; return; }
+  if (state.box.includes(id)) { toast(`${w.name} is in the box — retrieve it first`); closeAC(); searchInput.value=''; return; }
+  state.bag.push(id);
+  saveState();
+  updateCounts();
+  renderBagGrid();
+  playSound('add');
+  toast(`Added: ${w.name}`);
+  closeAC();
+  searchInput.value = '';
+  updateRollBtn();
+}
+
+function addAowById(id) {
+  const a = ashById[id];
+  if (!a) return;
+  if (state.aow_bag.includes(id)) { toast(`${a.name} already in ashes`); closeAC(); searchInput.value=''; return; }
+  state.aow_bag.push(id);
+  saveState();
+  updateCounts();
+  renderAowGrid();
+  playSound('add');
+  toast(`Added: ${a.name}`);
+  closeAC();
+  searchInput.value = '';
+}
+
+// ─── COUNTS ──────────────────────────────────────────
+function updateCounts() {
+  document.getElementById('bag-count').textContent = state.bag.length;
+  document.getElementById('box-count').textContent = state.box.length;
+  document.getElementById('aow-count').textContent = state.aow_bag.length;
+}
+
+function updateRollBtn() {
+  const emptyMsg = document.getElementById('roll-empty-msg');
+  const rollBtn = document.getElementById('roll-btn');
+  if (state.bag.length === 0) {
+    emptyMsg.style.display = 'block';
+    rollBtn.disabled = true;
+  } else {
+    emptyMsg.style.display = 'none';
+    rollBtn.disabled = false;
+  }
+}
+
+// ─── PANELS ───────────────────────────────────────────
+document.getElementById('btn-bag').addEventListener('click', () => openPanel('bag'));
+document.getElementById('btn-box').addEventListener('click', () => openPanel('box'));
+document.getElementById('btn-aow').addEventListener('click', () => openPanel('aow'));
+document.getElementById('close-bag').addEventListener('click', () => closePanel('bag'));
+document.getElementById('close-box').addEventListener('click', () => closePanel('box'));
+document.getElementById('close-aow').addEventListener('click', () => closePanel('aow'));
+
+document.getElementById('panel-bag').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('panel-bag')) closePanel('bag');
+});
+document.getElementById('panel-box').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('panel-box')) closePanel('box');
+});
+document.getElementById('panel-aow').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('panel-aow')) closePanel('aow');
+});
+
+function openPanel(which) {
+  if (which === 'bag') renderBagGrid();
+  else if (which === 'box') renderBoxGrid();
+  else if (which === 'aow') renderAowGrid();
+  document.getElementById(`panel-${which}`).classList.add('open');
+}
+function closePanel(which) {
+  document.getElementById(`panel-${which}`).classList.remove('open');
+}
+
+let bagMoveMode = false;
+
+function renderBagGrid() {
+  const grid = document.getElementById('bag-grid');
+  const empty = document.getElementById('bag-empty');
+  const modeBtn = document.getElementById('bag-move-mode-btn');
+  grid.innerHTML = '';
+  if (state.bag.length === 0) {
+    empty.style.display = 'block';
+    modeBtn.classList.remove('active');
+    bagMoveMode = false;
+    return;
+  }
+  empty.style.display = 'none';
+  modeBtn.classList.toggle('active', bagMoveMode);
+  state.bag.forEach(id => {
+    const w = weaponById[id];
+    if (!w) return;
+    const card = document.createElement('div');
+    card.className = 'weapon-card' + (bagMoveMode ? ' move-mode' : '');
+    card.innerHTML = `
+      <img src="${w.image}" alt="${w.name}" loading="lazy"/>
+      <div class="wc-name">${w.name}</div>
+      <button class="wc-remove" title="Remove">✕</button>
+      <div class="move-mode-overlay"><span class="move-mode-label">→ Box</span></div>
+    `;
+    card.querySelector('.wc-remove').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (bagMoveMode) return;
+      confirmRemoveFromBag(id);
+    });
+    if (bagMoveMode) {
+      card.addEventListener('click', () => moveToBox(id));
+    }
+    grid.appendChild(card);
+  });
+}
+
+document.getElementById('bag-move-mode-btn').addEventListener('click', () => {
+  bagMoveMode = !bagMoveMode;
+  renderBagGrid();
+});
+
+function renderBoxGrid() {
+  const grid = document.getElementById('box-grid');
+  const empty = document.getElementById('box-empty');
+  grid.innerHTML = '';
+  if (state.box.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  state.box.forEach(id => {
+    const w = weaponById[id];
+    if (!w) return;
+    const card = document.createElement('div');
+    card.className = 'weapon-card box-weapon-card';
+    card.innerHTML = `
+      <img src="${w.image}" alt="${w.name}" loading="lazy" style="filter:brightness(0.5) sepia(0.4) grayscale(0.3)"/>
+      <div class="wc-name">${w.name}</div>
+      <button class="retrieve-btn">↑ Retrieve</button>
+    `;
+    card.querySelector('.retrieve-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      retrieveFromBox(id);
+    });
+    grid.appendChild(card);
+  });
+}
+
+function renderAowGrid() {
+  const grid = document.getElementById('aow-grid');
+  const empty = document.getElementById('aow-empty');
+  grid.innerHTML = '';
+  if (state.aow_bag.length === 0) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  state.aow_bag.forEach(id => {
+    const a = ashById[id];
+    if (!a) return;
+    const card = document.createElement('div');
+    card.className = 'weapon-card aow-card';
+    card.innerHTML = `
+      <img src="${a.image}" alt="${a.name}" loading="lazy"/>
+      <div class="wc-name">${a.name}</div>
+      <button class="wc-remove" title="Remove">✕</button>
+    `;
+    card.querySelector('.wc-remove').addEventListener('click', (e) => {
+      e.stopPropagation();
+      state.aow_bag = state.aow_bag.filter(i => i !== id);
+      saveState();
+      updateCounts();
+      renderAowGrid();
+      toast(`Removed ash`);
+    });
+    grid.appendChild(card);
+  });
+}
+
+function moveToBox(id) {
+  const w = weaponById[id];
+  state.bag = state.bag.filter(i => i !== id);
+  if (!state.box.includes(id)) state.box.push(id);
+  saveState();
+  updateCounts();
+  updateRollBtn();
+  renderBagGrid();
+  toast(`${w.name} → Box`);
+}
+
+function confirmRemoveFromBag(id) {
+  const w = weaponById[id];
+  showConfirm(`Remove <strong>${w.name}</strong> from your bag?`, () => {
+    state.bag = state.bag.filter(i => i !== id);
+    saveState();
+    updateCounts();
+    renderBagGrid();
+    updateRollBtn();
+    toast(`Removed from bag`);
+  });
+}
+
+function retrieveFromBox(id) {
+  const w = weaponById[id];
+  showConfirm(`Retrieve <strong>${w.name}</strong> from the box back to your bag?`, () => {
+    state.box = state.box.filter(i => i !== id);
+    state.bag.push(id);
+    saveState();
+    updateCounts();
+    renderBoxGrid();
+    updateRollBtn();
+    toast(`${w.name} retrieved!`);
+  });
+}
+
+// ─── CONFIRM DIALOG ───────────────────────────────────
+let confirmCallback = null;
+function showConfirm(msg, cb) {
+  confirmCallback = cb;
+  document.getElementById('confirm-msg').innerHTML = msg;
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+document.getElementById('confirm-yes').addEventListener('click', () => {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  if (confirmCallback) { confirmCallback(); confirmCallback = null; }
+});
+document.getElementById('confirm-no').addEventListener('click', () => {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  confirmCallback = null;
+});
+
+// ─── ROLL MECHANIC ────────────────────────────────────
+let currentRoll = null;
+let isRolling = false;
+
+const rollBtn = document.getElementById('roll-btn');
+const rollingOverlay = document.getElementById('rolling-overlay');
+const idleState = document.getElementById('idle-state');
+const resultState = document.getElementById('result-state');
+const fateBtns = document.getElementById('fate-btns');
+const reelTrack = document.getElementById('reel-track');
+
+rollBtn.addEventListener('click', startRoll);
+
+function startRoll() {
+  if (isRolling || state.bag.length === 0) return;
+  isRolling = true;
+  currentRoll = null;
+
+  // Hide states
+  idleState.style.display = 'none';
+  resultState.style.display = 'none';
+  fateBtns.classList.remove('visible');
+  rollingOverlay.classList.add('active');
+  rollBtn.classList.add('rolling');
+  rollBtn.disabled = true;
+
+  // Pick the final weapon
+  const winnerIdx = Math.floor(Math.random() * state.bag.length);
+  const winnerId = state.bag[winnerIdx];
+
+  // Build reel items — fake spins before the winner
+  const TOTAL_ITEMS = 18 + Math.floor(Math.random() * 6); // 18–24 items
+  const reelWeapons = [];
+  for (let i = 0; i < TOTAL_ITEMS - 1; i++) {
+    const id = state.bag[Math.floor(Math.random() * state.bag.length)];
+    reelWeapons.push(weaponById[id]);
+  }
+  reelWeapons.push(weaponById[winnerId]); // last item is the winner
+
+  // Render reel
+  reelTrack.innerHTML = '';
+  const ITEM_H = reelTrack.closest('#reel-window').offsetHeight;
+
+  reelWeapons.forEach(w => {
+    const div = document.createElement('div');
+    div.className = 'reel-item';
+    div.innerHTML = `<img src="${w.image}" alt=""/><div class="reel-name">${w.name}</div>`;
+    reelTrack.appendChild(div);
+  });
+
+  // Start at top, animate to winner (last item centered)
+  reelTrack.style.transition = 'none';
+  reelTrack.style.transform = 'translateY(0)';
+
+  // Tick sounds during spin — dense at start, sparse at end (matches ease-out reel)
+  // pow > 1 gives quadratic spacing: early ticks close together, later ones far apart
+  const maxTicks = 16;
+  function scheduleTicks(startDelay, totalDuration) {
+    for (let i = 0; i < maxTicks; i++) {
+      const progress = i / (maxTicks - 1); // 0 → 1
+      const delay = startDelay + totalDuration * Math.pow(progress, 2.4) * 0.96;
+      setTimeout(() => playSound('roll_tick'), delay);
+    }
+  }
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const finalY = -(TOTAL_ITEMS - 1) * ITEM_H + (ITEM_H / 2 - ITEM_H / 2); // show last item centered
+    const targetY = -(TOTAL_ITEMS - 1) * ITEM_H;
+
+    // Ease-out with deceleration — longer duration, starts fast ends slow
+    const duration = 2200 + Math.random() * 600;
+    reelTrack.style.transition = `transform ${duration}ms cubic-bezier(0.12, 0.98, 0.3, 1)`;
+    reelTrack.style.transform = `translateY(${targetY}px)`;
+
+    scheduleTicks(0, duration);
+
+    setTimeout(() => {
+      finishRoll(winnerId, duration);
+    }, duration);
+  }));
+}
+
+// Rarity tiers based on category keywords — affects glow color/intensity
+function getWeaponRarity(w) {
+  const name = (w.name || '').toLowerCase();
+  const cat = (w.category || '').toLowerCase();
+  // Legendary / unique named weapons
+  const legendary = ['malenia','mohg','maliketh','radahn','godrick','rykard','morgott','rennala','godfrey','elden','erdtree','nox','carian','crucible','dragon','fingerprint','grafted','watchdog','blasphemous'];
+  if (legendary.some(k => name.includes(k))) return 'legendary';
+  // Rare / boss weapons
+  const rare = ["lusat's","azur","rivers of blood","moonveil","dark moon","serpent","serpentbone","ruins","beast","bloodhound","ruins","night","dark","sword of night","ice","spiral","bloodflame","serpentbone","sacred relic","marais","bastard's","star","wing of astel","death's poker","envoy","eclipse shotel","regalia","torchpole","urumi","jar cannon"];
+  if (rare.some(k => name.includes(k))) return 'rare';
+  // DLC weapons
+  if (w.dlc === 1 || name.includes("dlc")) return 'rare';
+  return 'common';
+}
+
+function applyRarityGlow(w) {
+  const img = document.getElementById('result-img');
+  const nameEl = document.getElementById('result-name');
+  const rarity = getWeaponRarity(w);
+  if (rarity === 'legendary') {
+    img.style.filter = 'drop-shadow(0 0 30px rgba(255,200,80,1)) drop-shadow(0 0 60px rgba(255,160,20,0.7)) drop-shadow(0 0 100px rgba(200,100,0,0.4))';
+    nameEl.style.setProperty('--glow-name-a', 'rgba(255,210,80,0.7)');
+    nameEl.style.setProperty('--glow-name-b', 'rgba(255,180,30,1), 0 0 60px rgba(200,120,0,0.5)');
+    nameEl.style.color = '#ffe580';
+  } else if (rarity === 'rare') {
+    img.style.filter = 'drop-shadow(0 0 22px rgba(160,100,255,0.9)) drop-shadow(0 0 44px rgba(120,60,220,0.5))';
+    nameEl.style.color = '#d4aaff';
+    nameEl.style.setProperty('--glow-name-a', 'rgba(180,120,255,0.5)');
+    nameEl.style.setProperty('--glow-name-b', 'rgba(200,150,255,0.9), 0 0 40px rgba(120,60,220,0.4)');
+  } else {
+    img.style.filter = 'drop-shadow(0 0 20px rgba(201,168,76,0.7)) drop-shadow(0 0 40px rgba(201,168,76,0.3))';
+    nameEl.style.color = '';
+    nameEl.style.setProperty('--glow-name-a', '');
+    nameEl.style.setProperty('--glow-name-b', '');
+  }
+}
+
+function finishRoll(winnerId, duration) {
+  const w = weaponById[winnerId];
+  currentRoll = w;
+
+  const rarity = getWeaponRarity(w);
+  playSound('roll_land', rarity);
+
+  rollingOverlay.classList.remove('active');
+  rollBtn.classList.remove('rolling');
+  isRolling = false;
+
+  // Show result
+  document.getElementById('result-img').src = w.image;
+  document.getElementById('result-name').textContent = w.name;
+  document.getElementById('result-category').textContent = w.category;
+  applyRarityGlow(w);
+  showAowOverlay(w);
+  resultState.style.display = 'flex';
+  fateBtns.classList.add('visible');
+  rollBtn.disabled = false;
+}
+
+function showAowOverlay(w) {
+  const overlay = document.getElementById('aow-overlay');
+  overlay.classList.remove('visible');
+  const compatNames = ER_WEAPON_AOW[w.name];
+  if (!compatNames || compatNames.length === 0) return;
+  const compatible = state.aow_bag.map(id => ashById[id]).filter(a => a && compatNames.includes(a.name));
+  if (compatible.length === 0) return;
+  const chosen = compatible[Math.floor(Math.random() * compatible.length)];
+  document.getElementById('aow-overlay-img').src = chosen.image;
+  document.getElementById('aow-overlay-name').textContent = chosen.name;
+  overlay.classList.add('visible');
+}
+
+// ─── FATE BUTTONS ─────────────────────────────────────
+document.getElementById('btn-keep').addEventListener('click', () => {
+  if (!currentRoll) return;
+  const w = currentRoll;
+  playSound('keep');
+  toast(`${w.name} — Kept!`);
+  resetToIdle();
+});
+
+document.getElementById('btn-lose').addEventListener('click', () => {
+  if (!currentRoll) return;
+  const w = currentRoll;
+  playSound('lose');
+  state.bag = state.bag.filter(i => i !== w.id);
+  if (!state.box.includes(w.id)) state.box.push(w.id);
+  saveState();
+  updateCounts();
+  updateRollBtn();
+  toast(`${w.name} — Lost to the box`);
+  resetToIdle();
+});
+
+function resetToIdle() {
+  currentRoll = null;
+  resultState.style.display = 'none';
+  fateBtns.classList.remove('visible');
+  idleState.style.display = 'flex';
+  document.getElementById('aow-overlay').classList.remove('visible');
+}
+
+// ─── SOUND EFFECTS ───────────────────────────────────
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  return audioCtx;
+}
+
+// Heavenly choir-bell synth voice: sine + detuned unison + slow vibrato
+function makeChoirVoice(ctx, freq, startTime, duration, volume, vibrato = 0) {
+  const master = ctx.createGain();
+  master.connect(ctx.destination);
+  master.gain.setValueAtTime(0, startTime);
+  master.gain.linearRampToValueAtTime(volume, startTime + 0.04);
+  master.gain.setValueAtTime(volume, startTime + duration * 0.6);
+  master.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+  // 3 detuned oscillators for width
+  [-4, 0, 4].forEach((detune, i) => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.connect(g); g.connect(master);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, startTime);
+    osc.detune.setValueAtTime(detune, startTime);
+    // Gentle vibrato
+    if (vibrato > 0) {
+      const lfo = ctx.createOscillator();
+      const lfoGain = ctx.createGain();
+      lfo.connect(lfoGain); lfoGain.connect(osc.frequency);
+      lfo.frequency.setValueAtTime(5, startTime);
+      lfoGain.gain.setValueAtTime(0, startTime);
+      lfoGain.gain.linearRampToValueAtTime(vibrato, startTime + 0.3);
+      lfo.start(startTime); lfo.stop(startTime + duration);
+    }
+    g.gain.setValueAtTime(i === 1 ? 0.6 : 0.2, startTime);
+    osc.start(startTime); osc.stop(startTime + duration);
+  });
+
+  // Soft upper harmonic
+  const h = ctx.createOscillator();
+  const hg = ctx.createGain();
+  h.connect(hg); hg.connect(master);
+  h.type = 'sine';
+  h.frequency.setValueAtTime(freq * 2, startTime);
+  hg.gain.setValueAtTime(0.08, startTime);
+  h.start(startTime); h.stop(startTime + duration * 0.5);
+
+  return master;
+}
+
+function playSound(type, rarity = 'common') {
+  try {
+    const ctx = getAudioCtx();
+    const t = ctx.currentTime;
+
+    if (type === 'roll_tick') {
+      // Soft harp-like pluck, pitch varies
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1400 + Math.random() * 600, t);
+      filter.Q.setValueAtTime(3, t);
+      osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(600 + Math.random() * 300, t);
+      osc.frequency.exponentialRampToValueAtTime(300, t + 0.12);
+      gain.gain.setValueAtTime(0.1, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+      osc.start(t); osc.stop(t + 0.15);
+
+    } else if (type === 'roll_land') {
+      // Shared compressor to prevent clipping on all rarity levels
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -14; comp.knee.value = 6;
+      comp.ratio.value = 4; comp.attack.value = 0.003; comp.release.value = 0.25;
+      comp.connect(ctx.destination);
+
+      if (rarity === 'legendary') {
+        // LEGENDARY — single deep gong + 4 choir voices staggered
+        const gong = ctx.createOscillator(), gongG = ctx.createGain();
+        gong.connect(gongG); gongG.connect(comp);
+        gong.type = 'sine';
+        gong.frequency.setValueAtTime(55, t);
+        gong.frequency.exponentialRampToValueAtTime(38, t + 1.5);
+        gongG.gain.setValueAtTime(0, t);
+        gongG.gain.linearRampToValueAtTime(0.5, t + 0.02);
+        gongG.gain.exponentialRampToValueAtTime(0.0001, t + 3.0);
+        gong.start(t); gong.stop(t + 3.1);
+        // 4 choir voices — A major chord, spread over time
+        [[220, 0,    3.2, 0.18, 2],
+         [330, 0.1,  2.8, 0.15, 2],
+         [440, 0.2,  2.4, 0.12, 1.5],
+         [660, 0.35, 1.8, 0.08, 1]
+        ].forEach(([f, d, dur, vol, vib]) => {
+          const v = makeChoirVoice(ctx, f, t + d, dur, vol, vib);
+          v.disconnect(); v.connect(comp);
+        });
+
+      } else if (rarity === 'rare') {
+        // RARE — medium gong + 3 choir voices in minor tuning
+        const gong = ctx.createOscillator(), gongG = ctx.createGain();
+        gong.connect(gongG); gongG.connect(comp);
+        gong.type = 'sine';
+        gong.frequency.setValueAtTime(65, t);
+        gong.frequency.exponentialRampToValueAtTime(45, t + 1.0);
+        gongG.gain.setValueAtTime(0, t);
+        gongG.gain.linearRampToValueAtTime(0.4, t + 0.02);
+        gongG.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
+        gong.start(t); gong.stop(t + 2.3);
+        // Eb minor — 3 voices
+        [[311, 0,    2.6, 0.18, 2.5],
+         [466, 0.1,  2.0, 0.13, 2],
+         [622, 0.22, 1.5, 0.08, 1.5]
+        ].forEach(([f, d, dur, vol, vib]) => {
+          const v = makeChoirVoice(ctx, f, t + d, dur, vol, vib);
+          v.disconnect(); v.connect(comp);
+        });
+
+      } else {
+        // COMMON — standard grace bell, 3 voices
+        const gong = ctx.createOscillator(), gongG = ctx.createGain(), gongFilter = ctx.createBiquadFilter();
+        gongFilter.type = 'lowpass'; gongFilter.frequency.value = 400;
+        gong.connect(gongFilter); gongFilter.connect(gongG); gongG.connect(comp);
+        gong.type = 'sine';
+        gong.frequency.setValueAtTime(55, t);
+        gong.frequency.exponentialRampToValueAtTime(40, t + 1.2);
+        gongG.gain.setValueAtTime(0.0, t);
+        gongG.gain.linearRampToValueAtTime(0.4, t + 0.015);
+        gongG.gain.exponentialRampToValueAtTime(0.0001, t + 2.0);
+        gong.start(t); gong.stop(t + 2.1);
+        [[330, 0.01, 2.5, 0.16, 2],
+         [494, 0.1,  2.0, 0.11, 1.5],
+         [659, 0.2,  1.5, 0.06, 1]
+        ].forEach(([f, d, dur, vol, vib]) => {
+          const v = makeChoirVoice(ctx, f, t + d, dur, vol, vib);
+          v.disconnect(); v.connect(comp);
+        });
+      }
+
+    } else if (type === 'add') {
+      // Brief soft ascending chime — item acquired
+      [[294, 0], [349, 0.1], [440, 0.2], [523, 0.3]].forEach(([freq, delay]) => {
+        makeChoirVoice(ctx, freq, t + delay, 0.7, 0.11, 1);
+      });
+
+    } else if (type === 'keep') {
+      // Triumphant E major swell
+      [[330, 0], [415, 0.06], [494, 0.12], [659, 0.18], [830, 0.28]].forEach(([freq, delay]) => {
+        makeChoirVoice(ctx, freq, t + delay, 2.2, 0.16, 3);
+      });
+      makeChoirVoice(ctx, 165, t, 2.5, 0.2, 0.5);
+
+    } else if (type === 'lose') {
+      // Mournful descending D minor toll
+      const gong = ctx.createOscillator(), gongG = ctx.createGain();
+      gong.connect(gongG); gongG.connect(ctx.destination);
+      gong.type = 'sine';
+      gong.frequency.setValueAtTime(80, t);
+      gong.frequency.exponentialRampToValueAtTime(50, t + 1.5);
+      gongG.gain.setValueAtTime(0.4, t);
+      gongG.gain.exponentialRampToValueAtTime(0.0001, t + 2.5);
+      gong.start(t); gong.stop(t + 2.5);
+      [[294, 0], [220, 0.3], [185, 0.7], [147, 1.2]].forEach(([freq, delay]) => {
+        makeChoirVoice(ctx, freq, t + delay, 1.4 - delay * 0.2, 0.18 - delay * 0.02, 2);
+      });
+    }
+  } catch(e) {}
+}
+
+// ─── TOAST ────────────────────────────────────────────
+let toastTimer;
+const toastEl = document.getElementById('toast');
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
+}
+
+// ─── INIT ─────────────────────────────────────────────
+function init() {
+  loadState();
+  loadWeapons();
+  loadAshes();
+  updateCounts();
+  updateRollBtn();
+
+  // Preload bag images
+  state.bag.forEach(id => {
+    const w = weaponById[id];
+    if (w) { const img = new Image(); img.src = w.image; }
+  });
+}
+
+init();
+</script>
+</body>
+</html>
