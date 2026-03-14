@@ -129,6 +129,12 @@
   .card-num.empty   { font-size:18px; color:#222244; }
   .card-num.rolling { font-size:16px; }
 
+  /* ── Screen overlay (for mythical effects) ── */
+  #screen-overlay {
+    position: fixed; inset: 0; pointer-events: none;
+    z-index: 200; opacity: 0; transition: opacity .1s;
+  }
+
   /* ── Rule box ── */
   #rule-box {
     width:100%; max-width:min(calc(100vw - 28px), 440px);
@@ -148,25 +154,202 @@
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
-    animation: fadeSlide .4s ease;
   }
 
-  #rule-box.tier-uncommon  { border-color:#ef444455; animation: fadeSlide .4s ease, rulePulseRed 2s ease-in-out .5s 3; }
-  #rule-title.tier-uncommon { color:#ef4444; }
+  /* ═══════════════════════════════════════════════
+     CURSE animations (slam from above, warm colors)
+  ═══════════════════════════════════════════════ */
+  @keyframes curseSlam {
+    0%   { opacity:0; transform: scale(1.15) translateY(-20px); }
+    55%  { opacity:1; transform: scale(0.97) translateY(4px); }
+    78%  { transform: scale(1.03); }
+    100% { opacity:1; transform: scale(1) translateY(0); }
+  }
+  @keyframes buffRise {
+    0%   { opacity:0; transform: scale(.9) translateY(18px); }
+    60%  { opacity:1; transform: scale(1.02) translateY(-3px); }
+    100% { opacity:1; transform: scale(1) translateY(0); }
+  }
 
-  #rule-box.tier-rare      { border-color:#3b82f688; animation: fadeSlide .4s ease, rulePulseBlue 2s ease-in-out .5s 3; background:#090d18; }
-  #rule-title.tier-rare    { color:#60a5fa; }
+  /* Mythical Curse: screen goes dark, red crack, then text */
+  @keyframes mythicCurseDarken {
+    0%   { background: #000; opacity: 0; }
+    15%  { opacity: .85; }
+    70%  { opacity: .85; }
+    100% { opacity: 0; }
+  }
+  @keyframes mythicCursePulse {
+    0%,100% { box-shadow: 0 0 0 #7f0000; }
+    20% { box-shadow: 0 0 80px #dc262699, 0 0 160px #7f000066; }
+    50% { box-shadow: 0 0 40px #dc262677; }
+  }
+  @keyframes mythicCurseText {
+    0%   { opacity:0; transform: scale(1.3) translateY(-12px); letter-spacing:8px; }
+    40%  { opacity:1; transform: scale(.98) translateY(2px); letter-spacing:2px; }
+    100% { opacity:1; transform: scale(1) translateY(0); letter-spacing:1.5px; }
+  }
 
-  #rule-box.tier-epic      { border-color:#a78bfa88; animation: fadeSlide .4s ease, rulePulsePurple 2s ease-in-out .5s 3; background:#0d0914; }
-  #rule-title.tier-epic    { color:#a78bfa; }
+  /* Mythical Buff: white flash then ice-blue glow */
+  @keyframes mythicBuffFlash {
+    0%   { background: #fff; opacity: 0; }
+    8%   { opacity: 1; }
+    40%  { opacity: .6; }
+    100% { opacity: 0; }
+  }
+  @keyframes mythicBuffGlow {
+    0%,100% { box-shadow: 0 0 20px #67e8f944; }
+    50% { box-shadow: 0 0 70px #67e8f9bb, 0 0 120px #0e749944; }
+  }
+  @keyframes mythicBuffText {
+    0%   { opacity:0; transform: scale(.85) translateY(16px); filter: blur(4px); }
+    50%  { opacity:1; transform: scale(1.01) translateY(-2px); filter: blur(0); }
+    100% { opacity:1; transform: scale(1) translateY(0); filter: blur(0); }
+  }
 
-  #rule-box.tier-legendary { border-color:#fbbf24; animation: fadeSlide .2s ease, legendaryPulse 1.4s ease-in-out .2s 4; background:#120e02; }
-  #rule-title.tier-legendary { color:#fbbf24; letter-spacing:4px; }
+  /* Pulse animations per tier × type */
+  @keyframes pulseMythicCurse    { 0%,100%{box-shadow:0 0 20px #7f000033,inset 0 0 20px #7f000011} 50%{box-shadow:0 0 60px #dc2626aa,0 0 100px #7f000055,inset 0 0 30px #dc262622} }
+  @keyframes pulseMythicBuff     { 0%,100%{box-shadow:0 0 20px #67e8f944} 50%{box-shadow:0 0 70px #67e8f9bb,0 0 120px #0e749944} }
+  @keyframes pulseLegendaryCurse { 0%{box-shadow:0 0 0 #b4530000} 30%{box-shadow:0 0 50px #f97316cc,0 0 90px #b4530066} 70%{box-shadow:0 0 30px #f9731688} 100%{box-shadow:0 0 10px #f9731633} }
+  @keyframes pulseLegendaryBuff  { 0%{box-shadow:0 0 0 #06966600} 30%{box-shadow:0 0 50px #34d399cc,0 0 90px #06966666} 70%{box-shadow:0 0 30px #34d39988} 100%{box-shadow:0 0 10px #34d39933} }
+  @keyframes pulseUltraCurse     { 0%,100%{box-shadow:0 0 12px #7c3aed33} 50%{box-shadow:0 0 36px #7c3aed99} }
+  @keyframes pulseUltraBuff      { 0%,100%{box-shadow:0 0 12px #0891b233} 50%{box-shadow:0 0 36px #0891b299} }
+  @keyframes pulseRareCurse      { 0%,100%{box-shadow:0 0 10px #ef444420} 50%{box-shadow:0 0 28px #ef444466} }
+  @keyframes pulseRareBuff       { 0%,100%{box-shadow:0 0 10px #16a34a20} 50%{box-shadow:0 0 28px #16a34a66} }
+  @keyframes pulseUncommonCurse  { 0%,100%{box-shadow:0 0 8px #dc262611} 50%{box-shadow:0 0 18px #dc262644} }
+  @keyframes pulseUncommonBuff   { 0%,100%{box-shadow:0 0 8px #0d948011} 50%{box-shadow:0 0 18px #0d948044} }
 
-  @keyframes rulePulseRed    { 0%,100%{box-shadow:0 0 10px #ef444420} 50%{box-shadow:0 0 28px #ef444477} }
-  @keyframes rulePulseBlue   { 0%,100%{box-shadow:0 0 10px #3b82f620} 50%{box-shadow:0 0 28px #3b82f677} }
-  @keyframes rulePulsePurple { 0%,100%{box-shadow:0 0 10px #a78bfa20} 50%{box-shadow:0 0 32px #a78bfa99} }
-  @keyframes legendaryPulse  { 0%{box-shadow:0 0 0 #fbbf2400} 30%{box-shadow:0 0 48px #fbbf24cc, 0 0 90px #f59e0b66} 70%{box-shadow:0 0 28px #fbbf2488} 100%{box-shadow:0 0 8px #fbbf2433} }
+  /* ── Tier+type box styles ── */
+  /* MYTHICAL CURSE */
+  #rule-box.tier-mythical.type-curse {
+    background: #080004; border-color: #7f0000;
+    animation: curseSlam .45s cubic-bezier(.36,.07,.19,.97) both, pulseMythicCurse 1.8s ease-in-out .5s infinite;
+  }
+  #rule-title.tier-mythical.type-curse { color: #dc2626; letter-spacing:5px; }
+  #rule-text.tier-mythical.type-curse  { color: #fca5a5; text-shadow: 0 0 10px #7f000099; animation: mythicCurseText .9s ease .6s both; }
+
+  /* MYTHICAL BUFF */
+  #rule-box.tier-mythical.type-buff {
+    background: #000d14; border-color: #67e8f9;
+    animation: buffRise .5s cubic-bezier(.22,.61,.36,1) both, pulseMythicBuff 2s ease-in-out .5s infinite;
+  }
+  #rule-title.tier-mythical.type-buff { color: #67e8f9; letter-spacing:5px; }
+  #rule-text.tier-mythical.type-buff  { color: #cffafe; text-shadow: 0 0 14px #67e8f966; animation: mythicBuffText 1s ease .5s both; }
+
+  /* LEGENDARY CURSE */
+  #rule-box.tier-legendary.type-curse {
+    background: #0d0500; border-color: #f97316;
+    animation: curseSlam .4s cubic-bezier(.36,.07,.19,.97) both, pulseLegendaryCurse 1.6s ease-in-out .3s 4;
+  }
+  #rule-title.tier-legendary.type-curse { color: #f97316; letter-spacing:4px; }
+  #rule-text.tier-legendary.type-curse  { color: #fed7aa; text-shadow: 0 0 10px #f9731655; animation: ruleReveal .8s ease .3s both; }
+
+  /* LEGENDARY BUFF */
+  #rule-box.tier-legendary.type-buff {
+    background: #001209; border-color: #34d399;
+    animation: buffRise .45s cubic-bezier(.22,.61,.36,1) both, pulseLegendaryBuff 1.6s ease-in-out .3s 4;
+  }
+  #rule-title.tier-legendary.type-buff { color: #34d399; letter-spacing:4px; }
+  #rule-text.tier-legendary.type-buff  { color: #d1fae5; text-shadow: 0 0 10px #34d39955; animation: ruleReveal .8s ease .3s both; }
+
+  /* ULTRA RARE CURSE */
+  #rule-box.tier-ultra.type-curse {
+    background: #0a0514; border-color: #7c3aed88;
+    animation: curseSlam .38s cubic-bezier(.36,.07,.19,.97) both, pulseUltraCurse 2s ease-in-out .4s 3;
+  }
+  #rule-title.tier-ultra.type-curse { color: #a78bfa; }
+  #rule-text.tier-ultra.type-curse  { color: #ede9fe; animation: ruleReveal .7s ease .25s both; }
+
+  /* ULTRA RARE BUFF */
+  #rule-box.tier-ultra.type-buff {
+    background: #00080f; border-color: #0891b288;
+    animation: buffRise .42s cubic-bezier(.22,.61,.36,1) both, pulseUltraBuff 2s ease-in-out .4s 3;
+  }
+  #rule-title.tier-ultra.type-buff { color: #22d3ee; }
+  #rule-text.tier-ultra.type-buff  { color: #cffafe; animation: ruleReveal .7s ease .25s both; }
+
+  /* RARE CURSE */
+  #rule-box.tier-rare.type-curse {
+    background: #0f0606; border-color: #ef444455;
+    animation: curseSlam .35s cubic-bezier(.36,.07,.19,.97) both, pulseRareCurse 2s ease-in-out .4s 3;
+  }
+  #rule-title.tier-rare.type-curse { color: #f87171; }
+  #rule-text.tier-rare.type-curse  { color: #fecaca; animation: ruleReveal .6s ease .2s both; }
+
+  /* RARE BUFF */
+  #rule-box.tier-rare.type-buff {
+    background: #020f05; border-color: #16a34a55;
+    animation: buffRise .38s cubic-bezier(.22,.61,.36,1) both, pulseRareBuff 2s ease-in-out .4s 3;
+  }
+  #rule-title.tier-rare.type-buff { color: #4ade80; }
+  #rule-text.tier-rare.type-buff  { color: #dcfce7; animation: ruleReveal .6s ease .2s both; }
+
+  /* UNCOMMON CURSE */
+  #rule-box.tier-uncommon.type-curse {
+    border-color: #dc262644;
+    animation: curseSlam .32s cubic-bezier(.36,.07,.19,.97) both, pulseUncommonCurse 2.2s ease-in-out .4s 2;
+  }
+  #rule-title.tier-uncommon.type-curse { color: #f87171; }
+  #rule-text.tier-uncommon.type-curse  { color: #fecaca; animation: ruleReveal .55s ease .15s both; }
+
+  /* UNCOMMON BUFF */
+  #rule-box.tier-uncommon.type-buff {
+    border-color: #0d948044;
+    animation: buffRise .35s cubic-bezier(.22,.61,.36,1) both, pulseUncommonBuff 2.2s ease-in-out .4s 2;
+  }
+  #rule-title.tier-uncommon.type-buff { color: #2dd4bf; }
+  #rule-text.tier-uncommon.type-buff  { color: #ccfbf1; animation: ruleReveal .55s ease .15s both; }
+
+  /* COMMON CURSE */
+  #rule-box.tier-common.type-curse {
+    border-color: #dc262633;
+    animation: curseSlam .3s cubic-bezier(.36,.07,.19,.97) both;
+  }
+  #rule-title.tier-common.type-curse { color: #f87171; }
+  #rule-text.tier-common.type-curse  { color: #fca5a5; animation: ruleReveal .5s ease .1s both; }
+
+  /* COMMON BUFF */
+  #rule-box.tier-common.type-buff {
+    border-color: #16a34a33;
+    animation: buffRise .32s cubic-bezier(.22,.61,.36,1) both;
+  }
+  #rule-title.tier-common.type-buff { color: #4ade80; }
+  #rule-text.tier-common.type-buff  { color: #bbf7d0; animation: ruleReveal .5s ease .1s both; }
+
+  /* FREQUENT CURSE */
+  #rule-box.tier-frequent.type-curse {
+    border-color: #dc262622;
+    animation: curseSlam .28s ease both;
+  }
+  #rule-title.tier-frequent.type-curse { color: #ef4444; }
+  #rule-text.tier-frequent.type-curse  { color: #fca5a5; animation: ruleReveal .45s ease both; }
+
+  /* FREQUENT BUFF */
+  #rule-box.tier-frequent.type-buff {
+    border-color: #16a34a22;
+    animation: buffRise .28s ease both;
+  }
+  #rule-title.tier-frequent.type-buff { color: #22c55e; }
+  #rule-text.tier-frequent.type-buff  { color: #bbf7d0; animation: ruleReveal .45s ease both; }
+
+  /* GUARANTEED — flat, no drama */
+  #rule-box.tier-guaranteed.type-curse {
+    border-color: #52181822;
+    animation: fadeSlide .3s ease both;
+  }
+  #rule-title.tier-guaranteed.type-curse { color: #b45454; }
+  #rule-text.tier-guaranteed.type-curse  { color: #e8e8e8; animation: fadeSlide .3s ease both; }
+
+  #rule-box.tier-guaranteed.type-buff {
+    border-color: #18522222;
+    animation: fadeSlide .3s ease both;
+  }
+  #rule-title.tier-guaranteed.type-buff { color: #4a9e6a; }
+  #rule-text.tier-guaranteed.type-buff  { color: #e8e8e8; animation: fadeSlide .3s ease both; }
+
+  /* No-rule fallback */
+  #rule-box.show:not([class*="tier-"]) {
+    animation: fadeSlide .4s ease both;
+  }
 
   #rule-title {
     font-size:8px; color:#333355; letter-spacing:2px;
@@ -177,15 +360,26 @@
     font-size:9px; color:#555577; text-align:center; line-height:2;
     letter-spacing:.5px;
   }
-  #rule-text.has-rule {
-    color:#e8e8e8;
-    animation: ruleReveal .6s ease .2s both;
+  #rule-text.has-rule { color:#e8e8e8; }
+
+  /* ── Buff/Curse pill toggle ── */
+  .rule-type-pill {
+    border: none; border-radius: 20px; cursor: pointer;
+    font-family: 'Press Start 2P', monospace; font-size: 5px;
+    padding: 4px 8px; letter-spacing: 1px; flex-shrink: 0;
+    transition: background .2s, color .2s, box-shadow .2s;
+    -webkit-tap-highlight-color: transparent;
   }
-  #rule-text.tier-legendary {
-    color:#fef3c7;
-    animation: ruleReveal .8s ease .3s both;
-    text-shadow: 0 0 12px #fbbf2466;
+  .rule-type-pill.curse {
+    background: #4a0808; color: #f87171;
+    box-shadow: 0 0 8px #dc262633;
   }
+  .rule-type-pill.curse:hover { background: #7f0d0d; box-shadow: 0 0 12px #dc262655; }
+  .rule-type-pill.buff {
+    background: #053a38; color: #2dd4bf;
+    box-shadow: 0 0 8px #0d948033;
+  }
+  .rule-type-pill.buff:hover { background: #0a5a56; box-shadow: 0 0 12px #0d948055; }
 
   /* ── Cog button ── */
   #cog-btn {
@@ -219,7 +413,6 @@
     margin-bottom:10px;
     overflow-y: auto;
     flex: 1;
-    /* subtle scrollbar */
     scrollbar-width: thin;
     scrollbar-color: #252545 transparent;
   }
@@ -236,7 +429,6 @@
   }
   .rule-item:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
 
-  /* textarea for rule text — auto-resizes, supports long content */
   .rule-text-input {
     width: 100%;
     background:#12122a; border:1px solid #1e1e38; border-radius:4px;
@@ -250,7 +442,6 @@
   }
   .rule-text-input:focus { border-color:#a78bfa; }
 
-  /* controls row: reorder buttons + pct + delete */
   .rule-controls {
     display: flex;
     align-items: center;
@@ -324,6 +515,9 @@
   <div id="rule-text"></div>
 </div>
 
+<!-- Screen overlay for mythical effects -->
+<div id="screen-overlay"></div>
+
 <!-- Cog -->
 <button id="cog-btn" title="Edit rules">⚙</button>
 
@@ -348,6 +542,48 @@ let rollIv     = null;
 let shinySlots = new Array(6).fill(false);
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Rarity tier system
+// ─────────────────────────────────────────────────────────────────────────────
+// pct → tier name
+function getRuleTier(pct) {
+  if (pct <= 1)  return 'mythical';
+  if (pct <= 1)  return 'mythical';   // ≤1%
+  if (pct === 2) return 'legendary';  // exactly 2%
+  if (pct <= 4)  return 'ultra';      // 3–4%
+  if (pct === 5) return 'rare';       // 5%
+  if (pct <= 8)  return 'uncommon';   // 6–8%
+  if (pct <= 10) return 'common';     // 9–10%
+  if (pct <= 20) return 'frequent';   // 11–20%
+  return 'guaranteed';                // 21%+
+}
+
+// re-evaluate so ≤1 and =2 boundaries work with floats
+function getRuleTierFixed(pct) {
+  if (pct <= 1)  return 'mythical';
+  if (pct <= 2)  return 'legendary';
+  if (pct <= 4)  return 'ultra';
+  if (pct <= 5)  return 'rare';
+  if (pct <= 8)  return 'uncommon';
+  if (pct <= 10) return 'common';
+  if (pct <= 20) return 'frequent';
+  return 'guaranteed';
+}
+
+const TIER_NAMES = {
+  mythical:   'MYTHICAL',
+  legendary:  'LEGENDARY',
+  ultra:      'ULTRA RARE',
+  rare:       'RARE',
+  uncommon:   'UNCOMMON',
+  common:     'COMMON',
+  frequent:   'FREQUENT',
+  guaranteed: 'GUARANTEED',
+};
+function getTierLabel(tier, type) {
+  return `${TIER_NAMES[tier]} ${(type || 'curse').toUpperCase()}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Web Audio — all sounds synthesised, no files
 // ─────────────────────────────────────────────────────────────────────────────
 let audioCtx = null;
@@ -361,7 +597,6 @@ function initAudio() {
   return audioCtx;
 }
 
-// Core helper: schedule a single synthesised note
 function playNote(freq, delay, dur, vol = 0.15, type = 'sine', slide = 0) {
   const ctx = initAudio();
   if (!ctx) return;
@@ -379,48 +614,126 @@ function playNote(freq, delay, dur, vol = 0.15, type = 'sine', slide = 0) {
   osc.stop(t + dur + 0.01);
 }
 
-// Thud-click as each slot slams in — ascending pitch per slot index
 function sfxSlotTick(slotIdx) {
   const freq = 150 + slotIdx * 45;
   playNote(freq, 0, 0.13, 0.20, 'triangle', freq * 2.8);
 }
 
-// Rule chimes — escalating drama per tier
-function sfxRuleUncommon() {
-  playNote(523, 0,    0.32, 0.11);        // C5
-  playNote(659, 0.18, 0.32, 0.11);        // E5
-}
-function sfxRuleRare() {
-  playNote(523, 0,    0.28, 0.13);        // C5
-  playNote(659, 0.13, 0.28, 0.13);        // E5
-  playNote(784, 0.26, 0.42, 0.14);        // G5
-}
-function sfxRuleEpic() {
-  [392, 494, 587, 784].forEach((f, i) =>
-    playNote(f, i * 0.1, 0.3 + i * 0.03, 0.12, 'triangle'));
-}
-function sfxRuleLegendary() {
-  // Rising square-wave fanfare
-  [262, 330, 392, 523, 659, 784].forEach((f, i) =>
-    playNote(f, i * 0.08, 0.28, 0.09, 'square'));
-  // Trailing sparkle cascade (same as shiny but offset)
-  setTimeout(() => sfxShinySparkle(0.065, 0.08), 560);
-}
-
-// The shiny sparkle — ascending pure sine pings (Do Re Mi Sol La Do)
 function sfxShinySparkle(spacing = 0.07, vol = 0.10) {
   [1047, 1175, 1319, 1568, 1760, 2093].forEach((f, i) =>
     playNote(f, i * spacing, 0.22, vol, 'sine'));
 }
 function sfxShiny() { sfxShinySparkle(0.07, 0.11); }
 
-function playRuleSfx(tier) {
-  const fn = { uncommon: sfxRuleUncommon, rare: sfxRuleRare, epic: sfxRuleEpic, legendary: sfxRuleLegendary }[tier];
-  if (fn) fn();
+// Curse SFX: descending, tense, warm
+function sfxCurseMythical() {
+  // Deep ominous drone
+  playNote(55, 0, 1.2, 0.18, 'sawtooth');
+  playNote(73, 0.05, 0.9, 0.10, 'square');
+  // Violent hit
+  [330, 277, 220, 165].forEach((f, i) => playNote(f, 0.3 + i * 0.07, 0.2, 0.14, 'sawtooth'));
+  // Trailing dissonance
+  playNote(110, 0.65, 0.8, 0.09, 'triangle');
+}
+function sfxCurseLegendary() {
+  [392, 330, 262, 196].forEach((f, i) => playNote(f, i * 0.09, 0.28, 0.12, 'square'));
+  setTimeout(() => playNote(110, 0, 0.5, 0.10, 'triangle'), 450);
+}
+function sfxCurseUltra() {
+  [392, 330, 294].forEach((f, i) => playNote(f, i * 0.1, 0.3, 0.11, 'sawtooth'));
+}
+function sfxCurseRare() {
+  playNote(392, 0, 0.3, 0.12, 'triangle', 523);
+  playNote(330, 0.2, 0.3, 0.10, 'triangle');
+}
+function sfxCurseUncommon() {
+  playNote(440, 0, 0.28, 0.10, 'triangle', 523);
+}
+function sfxCurseCommon()     { playNote(440, 0, 0.22, 0.08, 'triangle'); }
+function sfxCurseFrequent()   { playNote(440, 0, 0.15, 0.06, 'triangle'); }
+function sfxCurseGuaranteed() { playNote(440, 0, 0.10, 0.04, 'triangle'); }
+
+// Buff SFX: ascending, bright, cool
+function sfxBuffMythical() {
+  // Angelic swell
+  [523, 659, 784, 1047, 1319, 1568].forEach((f, i) =>
+    playNote(f, i * 0.09, 0.4, 0.09, 'sine'));
+  // Soft sparkle
+  setTimeout(() => sfxShinySparkle(0.06, 0.07), 700);
+}
+function sfxBuffLegendary() {
+  [262, 330, 392, 523, 659, 784].forEach((f, i) =>
+    playNote(f, i * 0.08, 0.28, 0.09, 'sine'));
+  setTimeout(() => sfxShinySparkle(0.065, 0.06), 560);
+}
+function sfxBuffUltra() {
+  [392, 494, 587, 784].forEach((f, i) =>
+    playNote(f, i * 0.1, 0.3 + i * 0.03, 0.10, 'sine'));
+}
+function sfxBuffRare() {
+  playNote(523, 0, 0.28, 0.11);
+  playNote(659, 0.13, 0.28, 0.11);
+  playNote(784, 0.26, 0.38, 0.12);
+}
+function sfxBuffUncommon() {
+  playNote(523, 0, 0.28, 0.10);
+  playNote(659, 0.15, 0.28, 0.10);
+}
+function sfxBuffCommon()     { playNote(523, 0, 0.24, 0.08); playNote(659, 0.16, 0.24, 0.08); }
+function sfxBuffFrequent()   { playNote(523, 0, 0.18, 0.06); }
+function sfxBuffGuaranteed() { playNote(523, 0, 0.12, 0.04); }
+
+function playRuleSfx(tier, type) {
+  const map = {
+    mythical:   { curse: sfxCurseMythical,   buff: sfxBuffMythical   },
+    legendary:  { curse: sfxCurseLegendary,  buff: sfxBuffLegendary  },
+    ultra:      { curse: sfxCurseUltra,      buff: sfxBuffUltra      },
+    rare:       { curse: sfxCurseRare,       buff: sfxBuffRare       },
+    uncommon:   { curse: sfxCurseUncommon,   buff: sfxBuffUncommon   },
+    common:     { curse: sfxCurseCommon,     buff: sfxBuffCommon     },
+    frequent:   { curse: sfxCurseFrequent,   buff: sfxBuffFrequent   },
+    guaranteed: { curse: sfxCurseGuaranteed, buff: sfxBuffGuaranteed },
+  };
+  map[tier]?.[type]?.();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Storage helpers (localStorage, fallback to cookie)
+// Screen overlay effects (mythical only)
+// ─────────────────────────────────────────────────────────────────────────────
+const overlay = document.getElementById('screen-overlay');
+
+function triggerMythicalCurseOverlay() {
+  overlay.style.background = '#000';
+  overlay.style.opacity    = '0';
+  overlay.style.transition = 'opacity .15s';
+  requestAnimationFrame(() => {
+    overlay.style.opacity = '.82';
+    // Red crack flash after dark
+    setTimeout(() => {
+      overlay.style.background = 'radial-gradient(ellipse at center, #7f000088 0%, #000 70%)';
+      setTimeout(() => {
+        overlay.style.transition = 'opacity .8s';
+        overlay.style.opacity    = '0';
+      }, 600);
+    }, 350);
+  });
+}
+
+function triggerMythicalBuffOverlay() {
+  overlay.style.background = '#fff';
+  overlay.style.opacity    = '0';
+  overlay.style.transition = 'opacity .08s';
+  requestAnimationFrame(() => {
+    overlay.style.opacity = '.92';
+    setTimeout(() => {
+      overlay.style.transition = 'opacity 1.1s';
+      overlay.style.opacity    = '0';
+    }, 180);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Storage helpers
 // ─────────────────────────────────────────────────────────────────────────────
 function saveData(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {
@@ -448,7 +761,11 @@ function loadData(key) {
 // ─────────────────────────────────────────────────────────────────────────────
 function normalizeRules(raw) {
   if (!Array.isArray(raw)) return [];
-  return raw.map(r => ({ text: String(r.text || ''), pct: parseFloat(r.pct) || 0 }));
+  return raw.map(r => ({
+    text: String(r.text || ''),
+    pct:  parseFloat(r.pct) || 0,
+    type: r.type === 'buff' ? 'buff' : 'curse',   // default curse
+  }));
 }
 
 let rules = normalizeRules(loadData('soullink_rules'));
@@ -463,16 +780,9 @@ function rollRule() {
   let acc = 0;
   for (const r of rules) {
     acc += parseFloat(r.pct) || 0;
-    if (rand < acc) return { text: r.text || '(unnamed rule)', pct: parseFloat(r.pct) || 0 };
+    if (rand < acc) return { text: r.text || '(unnamed rule)', pct: parseFloat(r.pct) || 0, type: r.type || 'curse' };
   }
   return null;
-}
-
-function getRuleTier(pct) {
-  if (pct <= 1)  return 'legendary';
-  if (pct <= 5)  return 'epic';
-  if (pct <= 10) return 'rare';
-  return 'uncommon';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -529,7 +839,7 @@ function buildGrid() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Render (during spinner — all at once)
+// Render (during spinner)
 // ─────────────────────────────────────────────────────────────────────────────
 function renderCards(nums, isRolling) {
   for (let i = 0; i < 6; i++) {
@@ -547,7 +857,7 @@ function renderCards(nums, isRolling) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Staggered slam-in reveal — one card every 160 ms
+// Staggered slam-in reveal
 // ─────────────────────────────────────────────────────────────────────────────
 function revealSlots(nums, onDone) {
   for (let i = 0; i < 6; i++) {
@@ -561,7 +871,7 @@ function revealSlots(nums, onDone) {
       numEl.style.textShadow = 'none';
 
       card.classList.remove('slam');
-      void card.offsetWidth; // force reflow so animation restarts cleanly
+      void card.offsetWidth;
       card.classList.add('slam');
       card.addEventListener('animationend', () => card.classList.remove('slam'), { once: true });
 
@@ -602,32 +912,36 @@ function revealShinySlots() {
 // ─────────────────────────────────────────────────────────────────────────────
 // Rule box
 // ─────────────────────────────────────────────────────────────────────────────
-const TIER_LABELS = {
-  legendary: 'LEGENDARY RULE',
-  epic:      'EPIC RULE',
-  rare:      'RARE RULE',
-  uncommon:  'SPECIAL RULE',
-};
-
 function showRuleBox(result) {
   const box    = document.getElementById('rule-box');
   const title  = document.getElementById('rule-title');
   const textEl = document.getElementById('rule-text');
 
+  // Reset
   box.className    = '';
   title.className  = '';
   textEl.className = '';
-  textEl.style.color = '';
+  textEl.style.color      = '';
+  textEl.style.textShadow = '';
   void box.offsetWidth;
 
   if (result) {
-    const tier = getRuleTier(result.pct);
-    box.className      = 'show tier-' + tier;
-    title.className    = 'tier-' + tier;
-    title.textContent  = TIER_LABELS[tier];
-    textEl.className   = 'has-rule' + (tier === 'legendary' ? ' tier-legendary' : '');
+    const tier = getRuleTierFixed(result.pct);
+    const type = result.type || 'curse';
+
+    // Mythical screen overlays fire first
+    if (tier === 'mythical') {
+      if (type === 'curse') triggerMythicalCurseOverlay();
+      else                  triggerMythicalBuffOverlay();
+    }
+
+    box.className    = `show tier-${tier} type-${type}`;
+    title.className  = `tier-${tier} type-${type}`;
+    title.textContent = getTierLabel(tier, type);
+    textEl.className  = `has-rule tier-${tier} type-${type}`;
     textEl.textContent = result.text;
-    playRuleSfx(tier);
+
+    playRuleSfx(tier, type);
   } else {
     box.className      = 'show';
     title.textContent  = 'SPECIAL RULE';
@@ -645,14 +959,13 @@ function hideRuleBox() {
 // ─────────────────────────────────────────────────────────────────────────────
 function roll() {
   if (rolling) return;
-  initAudio(); // must be called during user gesture so AudioContext is allowed
+  initAudio();
   const max = getMax();
   document.getElementById('pool-input').value = max;
   rolling = true;
   hideRuleBox();
   clearAllShiny();
 
-  // Each slot gets its own independent shiny roll.
   rollShinySlots();
 
   const btn = document.getElementById('roll-btn');
@@ -668,7 +981,6 @@ function roll() {
       clearInterval(rollIv);
       team = genTeam(max);
 
-      // Blank cards — they'll reveal one-by-one
       for (let i = 0; i < 6; i++) {
         const numEl = document.getElementById(`card-num-${i}`);
         numEl.textContent = '—';
@@ -682,10 +994,7 @@ function roll() {
       document.getElementById('pb-right').classList.remove('spinning');
 
       revealSlots(team, () => {
-        // Rule reveal after all slots land
         setTimeout(() => showRuleBox(rollRule()), 250);
-
-        // Shiny reveal — a beat after all cards shown, like in the games
         setTimeout(revealShinySlots, 700);
       });
     }
@@ -742,7 +1051,7 @@ function renderRulesPanel() {
     const item = document.createElement('div');
     item.className = 'rule-item';
 
-    // ── Textarea for rule text (auto-resizes, supports multiline) ──
+    // Textarea
     const textIn = document.createElement('textarea');
     textIn.className   = 'rule-text-input';
     textIn.placeholder = 'Rule description...';
@@ -753,7 +1062,6 @@ function renderRulesPanel() {
     const saveText = () => { rules[i].text = textIn.value; saveRules(); };
     textIn.addEventListener('input',  () => { autoResize(textIn); saveText(); });
     textIn.addEventListener('blur',   saveText);
-    // Tab → jump to % field; Enter = newline (normal textarea behaviour)
     textIn.addEventListener('keydown', (e) => {
       if (e.key === 'Tab' && !e.shiftKey) {
         e.preventDefault();
@@ -761,7 +1069,7 @@ function renderRulesPanel() {
       }
     });
 
-    // ── Controls row ──
+    // Controls row
     const controls = document.createElement('div');
     controls.className = 'rule-controls';
 
@@ -789,7 +1097,7 @@ function renderRulesPanel() {
       saveRules(); renderRulesPanel();
     });
 
-    // ── % input: save on blur/enter, live total preview on input ──
+    // % input
     const pctIn = document.createElement('input');
     pctIn.type      = 'text';
     pctIn.inputMode = 'decimal';
@@ -803,22 +1111,16 @@ function renderRulesPanel() {
       saveRules();
       updateTotal();
     };
-    // Live total while typing (don't clamp yet — allow "0." mid-type)
     pctIn.addEventListener('input', updateTotal);
     pctIn.addEventListener('blur',  savePct);
     pctIn.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { savePct(); pctIn.blur(); }
-
-      // Tab → next rule's text area
       if (e.key === 'Tab' && !e.shiftKey) {
         savePct();
         const next = list.children[i + 1];
         if (next) { e.preventDefault(); next.querySelector('.rule-text-input').focus(); }
       }
-      // Shift+Tab → back to this rule's text
       if (e.key === 'Tab' && e.shiftKey) { e.preventDefault(); textIn.focus(); }
-
-      // Arrow Up/Down → nudge by 0.5 (Shift = 5)
       if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
         e.preventDefault();
         const cur   = parseFloat(pctIn.value.replace(',', '.')) || 0;
@@ -829,8 +1131,6 @@ function renderRulesPanel() {
         saveRules();
         updateTotal();
       }
-
-      // Alt+Arrow → reorder rule
       if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
         e.preventDefault();
         const dir = e.key === 'ArrowUp' ? -1 : 1;
@@ -849,6 +1149,19 @@ function renderRulesPanel() {
     pctLbl.className   = 'pct-label';
     pctLbl.textContent = '%';
 
+    // ── Buff/Curse pill ──
+    const pill = document.createElement('button');
+    pill.className = 'rule-type-pill ' + (rule.type === 'buff' ? 'buff' : 'curse');
+    pill.textContent = rule.type === 'buff' ? 'BUFF' : 'CURSE';
+    pill.title = 'Toggle buff / curse';
+    pill.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      rules[i].type = rules[i].type === 'buff' ? 'curse' : 'buff';
+      saveRules();
+      pill.className   = 'rule-type-pill ' + rules[i].type;
+      pill.textContent = rules[i].type === 'buff' ? 'BUFF' : 'CURSE';
+    });
+
     const del = document.createElement('button');
     del.className   = 'rule-del';
     del.textContent = '✕';
@@ -864,6 +1177,7 @@ function renderRulesPanel() {
     controls.appendChild(downBtn);
     controls.appendChild(pctIn);
     controls.appendChild(pctLbl);
+    controls.appendChild(pill);
     controls.appendChild(del);
 
     item.appendChild(textIn);
@@ -877,7 +1191,6 @@ function renderRulesPanel() {
 }
 
 function updateTotal() {
-  // Read live values from inputs if panel is open, otherwise use saved rules
   let total = 0;
   const inputs = document.querySelectorAll('.rule-pct-input');
   if (inputs.length) {
@@ -892,7 +1205,7 @@ function updateTotal() {
 
 document.getElementById('add-rule-btn').addEventListener('pointerdown', (e) => {
   e.preventDefault();
-  rules.push({ text: '', pct: 5 });
+  rules.push({ text: '', pct: 5, type: 'curse' });
   saveRules();
   renderRulesPanel();
   requestAnimationFrame(() => {
