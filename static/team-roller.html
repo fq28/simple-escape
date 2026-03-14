@@ -482,6 +482,22 @@
   }
   #add-rule-btn:hover { border-color:#a78bfa; color:#a78bfa; }
 
+  /* ── Panel toolbar (sort + import/export) ── */
+  #panel-toolbar {
+    display: flex; gap: 5px; margin-bottom: 8px; flex-shrink: 0; flex-wrap: wrap;
+  }
+  .toolbar-btn {
+    background: #12122a; border: 1px solid #1e1e38; border-radius: 4px;
+    color: #444466; font-family: 'Press Start 2P', monospace; font-size: 5px;
+    padding: 5px 7px; cursor: pointer; letter-spacing: 1px;
+    transition: all .15s; flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .toolbar-btn:hover { border-color: #a78bfa; color: #a78bfa; }
+  .toolbar-btn.export-btn:hover { border-color: #22c55e; color: #22c55e; }
+  .toolbar-btn.import-btn:hover { border-color: #38bdf8; color: #38bdf8; }
+  #import-file { display: none; }
+
   #rules-total {
     font-size:6px; color:#333355; text-align:right; letter-spacing:1px; flex-shrink:0;
   }
@@ -523,7 +539,14 @@
 
 <!-- Rules editor panel -->
 <div id="rules-panel">
-  <h3>⚙ SPECIAL RULES</h3>
+  <h3>SPECIAL RULES</h3>
+  <div id="panel-toolbar">
+    <button class="toolbar-btn" id="sort-rarity-btn" title="Sort by rarity (rarest first)">↓ RARITY</button>
+    <button class="toolbar-btn" id="sort-type-btn"   title="Sort by type (curses then buffs)">↓ TYPE</button>
+    <button class="toolbar-btn export-btn" id="export-btn" title="Export rules as CSV">↑ EXPORT</button>
+    <button class="toolbar-btn import-btn" id="import-btn" title="Import rules from CSV">↓ IMPORT</button>
+    <input type="file" id="import-file" accept=".csv,text/csv"/>
+  </div>
   <div id="rules-list"></div>
   <button id="add-rule-btn">+ ADD RULE</button>
   <div id="rules-total">TOTAL: <span id="total-pct">0</span>% &nbsp;·&nbsp; NOTHING: <span id="nothing-pct">100</span>%</div>
@@ -1218,8 +1241,12 @@ const cogBtn     = document.getElementById('cog-btn');
 const rulesPanel = document.getElementById('rules-panel');
 let panelOpen    = false;
 
+// Stop panel interactions from bubbling to the document close-listener
+rulesPanel.addEventListener('pointerdown', (e) => e.stopPropagation());
+
 cogBtn.addEventListener('pointerdown', (e) => {
   e.preventDefault();
+  e.stopPropagation();
   panelOpen = !panelOpen;
   cogBtn.classList.toggle('open', panelOpen);
   if (panelOpen) { rulesPanel.classList.add('open'); renderRulesPanel(); }
@@ -1228,12 +1255,103 @@ cogBtn.addEventListener('pointerdown', (e) => {
 
 document.addEventListener('pointerdown', (e) => {
   if (!panelOpen) return;
-  if (!rulesPanel.contains(e.target) && e.target !== cogBtn) {
-    panelOpen = false;
-    cogBtn.classList.remove('open');
-    rulesPanel.classList.remove('open');
-  }
+  panelOpen = false;
+  cogBtn.classList.remove('open');
+  rulesPanel.classList.remove('open');
 });
+
+// ── Sort ──
+const TIER_ORDER = ['mythical','legendary','ultra','rare','uncommon','common','frequent','guaranteed'];
+
+document.getElementById('sort-rarity-btn').addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  rules.sort((a, b) => TIER_ORDER.indexOf(getRuleTierFixed(a.pct)) - TIER_ORDER.indexOf(getRuleTierFixed(b.pct)));
+  saveRules(); renderRulesPanel();
+});
+
+document.getElementById('sort-type-btn').addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  // curses first, then buffs; preserve relative order within each group
+  rules.sort((a, b) => {
+    const ta = a.type === 'buff' ? 1 : 0;
+    const tb = b.type === 'buff' ? 1 : 0;
+    return ta - tb;
+  });
+  saveRules(); renderRulesPanel();
+});
+
+// ── Export CSV ──
+document.getElementById('export-btn').addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  const lines = ['text,pct,type'];
+  for (const r of rules) {
+    const escaped = String(r.text || '').replace(/"/g, '""');
+    lines.push(`"${escaped}",${r.pct},${r.type || 'curse'}`);
+  }
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'soullink-rules.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// ── Import CSV ──
+document.getElementById('import-btn').addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  document.getElementById('import-file').click();
+});
+
+document.getElementById('import-file').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const imported = parseCSV(ev.target.result);
+    if (!imported.length) return;
+    rules = imported;
+    saveRules();
+    renderRulesPanel();
+  };
+  reader.readAsText(file);
+  this.value = '';
+});
+
+function parseCSV(text) {
+  const lines  = text.split(/\r?\n/).filter(l => l.trim());
+  if (!lines.length) return [];
+  // skip header if present
+  const start  = lines[0].trim().toLowerCase().startsWith('text') ? 1 : 0;
+  const result = [];
+  for (let i = start; i < lines.length; i++) {
+    const cols = splitCSVLine(lines[i]);
+    if (!cols.length) continue;
+    const text = cols[0] ?? '';
+    const pct  = Math.max(0, Math.min(100, parseFloat(cols[1]) || 0));
+    const type = cols[2]?.trim().toLowerCase() === 'buff' ? 'buff' : 'curse';
+    result.push({ text, pct, type });
+  }
+  return result;
+}
+
+function splitCSVLine(line) {
+  const cols = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (ch === ',' && !inQ) {
+      cols.push(cur); cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  cols.push(cur);
+  return cols;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Init
