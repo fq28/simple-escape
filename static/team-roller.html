@@ -342,10 +342,10 @@
 const COLORS       = ["#ef4444","#f97316","#eab308","#22c55e","#a78bfa","#ec4899"];
 const SHINY_CHANCE = 1 / 512;
 
-let team     = new Array(6).fill(null);
-let rolling  = false;
-let rollIv   = null;
-let shinyIdx = -1; // which slot is shiny this roll (-1 = none)
+let team       = new Array(6).fill(null);
+let rolling    = false;
+let rollIv     = null;
+let shinySlots = new Array(6).fill(false);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Web Audio — all sounds synthesised, no files
@@ -577,13 +577,26 @@ function revealSlots(nums, onDone) {
 // ─────────────────────────────────────────────────────────────────────────────
 function applyShiny(idx) {
   document.querySelector(`.num-card[data-idx="${idx}"]`)?.classList.add('shiny');
-  sfxShiny();
 }
 
 function clearAllShiny() {
   for (let i = 0; i < 6; i++) {
     document.querySelector(`.num-card[data-idx="${i}"]`)?.classList.remove('shiny');
   }
+}
+
+function rollShinySlots() {
+  shinySlots = Array.from({ length: 6 }, () => Math.random() < SHINY_CHANCE);
+}
+
+function revealShinySlots() {
+  let anyShiny = false;
+  shinySlots.forEach((isShiny, idx) => {
+    if (!isShiny) return;
+    anyShiny = true;
+    applyShiny(idx);
+  });
+  if (anyShiny) sfxShiny();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -639,8 +652,8 @@ function roll() {
   hideRuleBox();
   clearAllShiny();
 
-  // Decide shiny before the animation starts (1/512 chance, one random slot)
-  shinyIdx = Math.random() < SHINY_CHANCE ? Math.floor(Math.random() * 6) : -1;
+  // Each slot gets its own independent shiny roll.
+  rollShinySlots();
 
   const btn = document.getElementById('roll-btn');
   btn.textContent = 'ROLLING...';
@@ -673,9 +686,7 @@ function roll() {
         setTimeout(() => showRuleBox(rollRule()), 250);
 
         // Shiny reveal — a beat after all cards shown, like in the games
-        if (shinyIdx >= 0) {
-          setTimeout(() => applyShiny(shinyIdx), 700);
-        }
+        setTimeout(revealShinySlots, 700);
       });
     }
   }, 55);
@@ -702,10 +713,15 @@ function rerollSlot(idx) {
       clearInterval(iv);
       const newVal      = randExcluding(max, others);
       team[idx]         = newVal;
+      shinySlots[idx]   = Math.random() < SHINY_CHANCE;
       numEl.textContent = newVal;
       numEl.className   = 'card-num';
       numEl.style.color = '#e8e8e8';
       sfxSlotTick(idx);
+      if (shinySlots[idx]) {
+        applyShiny(idx);
+        sfxShiny();
+      }
     }
   }, 55);
 }
