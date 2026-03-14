@@ -674,6 +674,12 @@ function sfxSlotTick(slotIdx) {
   playNote(freq, 0, 0.13, 0.20, 'triangle', freq * 2.8);
 }
 
+// Shuffle tick — short noise burst, slightly randomised pitch each call
+function sfxShuffleTick() {
+  const freq = 80 + Math.random() * 120;
+  playNote(freq, 0, 0.04, 0.07, 'triangle', freq * 1.8 + Math.random() * 60);
+}
+
 function sfxShinySparkle(spacing = 0.07, vol = 0.10) {
   [1047, 1175, 1319, 1568, 1760, 2093].forEach((f, i) =>
     playNote(f, i * spacing, 0.22, vol, 'sine'));
@@ -1035,6 +1041,7 @@ function roll() {
   let n = 0;
   rollIv = setInterval(() => {
     renderCards(genTeam(max), true);
+    sfxShuffleTick();
     if (++n >= 16) {
       clearInterval(rollIv);
       team = genTeam(max);
@@ -1076,6 +1083,7 @@ function rerollSlot(idx) {
   const iv = setInterval(() => {
     numEl.textContent = randExcluding(max, others);
     numEl.className   = 'card-num rolling';
+    sfxShuffleTick();
     if (++n >= 10) {
       clearInterval(iv);
       const newVal      = randExcluding(max, others);
