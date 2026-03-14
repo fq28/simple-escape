@@ -1385,17 +1385,16 @@ async function pushToGist() {
 }
 
 function buildGistPayload() {
-  // Merge all runs from local cache, then overwrite current run
+  // Each run is fully self-contained; no global keys
   const cached = loadData('soullink_gist_cache') || {};
-  cached.rules = rules;
   const runKey = `run_${currentRun}`;
   cached[runKey] = {
+    rules: rules,
     journal: journalEntries,
     teamCount: teamCount,
     p1: BATTLE_PLAYER_1,
     p2: BATTLE_PLAYER_2,
   };
-  // Store back to local cache
   saveData('soullink_gist_cache', cached);
   return cached;
 }
@@ -1411,14 +1410,7 @@ async function pullFromGist() {
     // Save full remote as local cache
     saveData('soullink_gist_cache', remote);
 
-    // Apply rules
-    if (Array.isArray(remote.rules) && remote.rules.length) {
-      rules = normalizeRules(remote.rules);
-      saveData('soullink_rules', rules);
-      if (panelOpen) renderRulesPanel();
-    }
-
-    // Apply current run data
+    // Apply current run data (rules now live inside each run)
     applyRunData(remote, currentRun);
     showSync('done', 'LOADED');
   } catch(e) {
@@ -1431,21 +1423,32 @@ function applyRunData(remote, run) {
   const runKey = `run_${run}`;
   const runData = remote[runKey];
   if (runData) {
+    if (Array.isArray(runData.rules)) {
+      rules = normalizeRules(runData.rules);
+      saveData(`soullink_run${run}_rules`, rules);
+      if (panelOpen) renderRulesPanel();
+    }
     if (Array.isArray(runData.journal)) {
       journalEntries = runData.journal;
-      saveData('soullink_journal', journalEntries);
+      saveData(`soullink_run${run}_journal`, journalEntries);
     }
     if (typeof runData.teamCount === 'number') {
       teamCount = runData.teamCount;
       teamCountInput.value = teamCount;
-      saveData('soullink_team_count', teamCount);
+      saveData(`soullink_run${run}_teamcount`, teamCount);
     }
     setPlayerNames(runData.p1 || 'Player 1', runData.p2 || 'Player 2');
   } else {
-    // No data for this run yet — start fresh
+    // No data for this run yet — start fresh with empty state
+    rules = [];
     journalEntries = [];
-    saveData('soullink_journal', []);
+    teamCount = 0;
+    teamCountInput.value = 0;
+    saveData(`soullink_run${run}_rules`, []);
+    saveData(`soullink_run${run}_journal`, []);
+    saveData(`soullink_run${run}_teamcount`, 0);
     setPlayerNames('Player 1', 'Player 2');
+    if (panelOpen) renderRulesPanel();
   }
   updateJournalBadge();
   if (journalOpen) renderJournalEntries();
@@ -1470,9 +1473,13 @@ function normalizeRules(raw) {
   }));
 }
 
-let rules = normalizeRules(loadData('soullink_rules'));
+// rules are loaded per-run after currentRun is known (see bottom init)
+let rules = [];
 
-function saveRules() { saveData('soullink_rules', rules); schedulePush(); }
+function saveRules() {
+  saveData(`soullink_run${currentRun}_rules`, rules);
+  schedulePush();
+}
 
 function rollRule() {
   if (!rules.length) return null;
@@ -2301,18 +2308,22 @@ function splitCSVLine(line) {
 const teamCountInput = document.getElementById('team-count-input');
 
 function loadTeamCount() {
-  const v = parseInt(loadData('soullink_team_count'), 10);
+  const v = parseInt(loadData(`soullink_run${currentRun}_teamcount`), 10);
   return isNaN(v) ? 0 : v;
 }
 
-let teamCount = loadTeamCount();
+let teamCount = 0; // loaded after currentRun is known (see bottom init)
 teamCountInput.value = teamCount;
+
+function saveTeamCount() {
+  saveData(`soullink_run${currentRun}_teamcount`, teamCount);
+}
 
 teamCountInput.addEventListener('change', () => {
   const v = parseInt(teamCountInput.value, 10);
   teamCount = isNaN(v) ? 0 : Math.max(0, v);
   teamCountInput.value = teamCount;
-  saveData('soullink_team_count', teamCount);
+  saveTeamCount();
   schedulePush();
 });
 
@@ -2320,13 +2331,13 @@ teamCountInput.addEventListener('blur', () => {
   const v = parseInt(teamCountInput.value, 10);
   teamCount = isNaN(v) ? 0 : Math.max(0, v);
   teamCountInput.value = teamCount;
-  saveData('soullink_team_count', teamCount);
+  saveTeamCount();
 });
 
 function incrementTeamCount() {
   teamCount++;
   teamCountInput.value = teamCount;
-  saveData('soullink_team_count', teamCount);
+  saveTeamCount();
   // bump animation
   teamCountInput.classList.remove('bumped');
   void teamCountInput.offsetWidth;
@@ -2444,13 +2455,13 @@ document.getElementById('pool-input').addEventListener('blur', function() {
 let journalEntries = [];
 
 function loadJournal() {
-  const d = loadData('soullink_journal');
+  const d = loadData(`soullink_run${currentRun}_journal`);
   if (!Array.isArray(d)) return [];
   return d;
 }
 
 function saveJournal() {
-  saveData('soullink_journal', journalEntries);
+  saveData(`soullink_run${currentRun}_journal`, journalEntries);
   schedulePush();
 }
 
@@ -2834,22 +2845,14 @@ runNumberInput.addEventListener('change', () => {
   currentRun = isNaN(v) ? 1 : Math.max(1, Math.min(99, v));
   runNumberInput.value = currentRun;
   saveData('soullink_current_run', currentRun);
-  // Load data for this run from gist cache (or local)
+  // Try gist cache first, then fall back to local per-run storage
   const cached = loadData('soullink_gist_cache');
-  if (cached) {
+  if (cached?.[`run_${currentRun}`]) {
     applyRunData(cached, currentRun);
   } else {
-    journalEntries = [];
-    updateJournalBadge();
-    if (journalOpen) renderJournalEntries();
+    loadRunFromLocal(currentRun);
   }
-  // Also sync team count from local for this run key (if no gist)
-  const storedCount = loadData(`soullink_team_count_run${currentRun}`);
-  if (storedCount !== null) {
-    teamCount = parseInt(storedCount, 10) || 0;
-    teamCountInput.value = teamCount;
-  }
-  // Pull fresh from gist for this run
+  // Pull fresh from gist
   pullFromGist();
 });
 
@@ -2916,13 +2919,22 @@ p2Input.addEventListener('keydown', e => { if (e.key === 'Enter') p2Input.blur()
 p1Input.addEventListener('pointerdown', e => e.stopPropagation());
 p2Input.addEventListener('pointerdown', e => e.stopPropagation());
 
-// Load names for current run from local cache on startup (before gist pull)
-const _cachedRunData = (loadData('soullink_gist_cache') || {})[`run_${currentRun}`];
-if (_cachedRunData?.p1) setPlayerNames(_cachedRunData.p1, _cachedRunData.p2 || 'Player 2');
+// ── Load run from local storage (fallback when gist unavailable) ──
+function loadRunFromLocal(run) {
+  rules = normalizeRules(loadData(`soullink_run${run}_rules`) || []);
+  journalEntries = (() => { const d = loadData(`soullink_run${run}_journal`); return Array.isArray(d) ? d : []; })();
+  teamCount = (() => { const v = parseInt(loadData(`soullink_run${run}_teamcount`), 10); return isNaN(v) ? 0 : v; })();
+  teamCountInput.value = teamCount;
+  const cached = loadData('soullink_gist_cache');
+  const runData = cached?.[`run_${run}`];
+  setPlayerNames(runData?.p1 || 'Player 1', runData?.p2 || 'Player 2');
+  if (panelOpen) renderRulesPanel();
+  updateJournalBadge();
+  if (journalOpen) renderJournalEntries();
+}
 
-// ── Init journal ──
-journalEntries = loadJournal();
-updateJournalBadge();
+// ── Init: load current run from local storage ──
+loadRunFromLocal(currentRun);
 
 // Pull from gist on load if token exists
 if (existingToken) {
