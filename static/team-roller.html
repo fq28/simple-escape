@@ -516,19 +516,13 @@
   }
   .jentry-outcome-btn {
     background:#12122a; border:1px solid #2a2a4a; border-radius:6px;
-    cursor:pointer; font-size:12px; padding:3px 6px 1px; line-height:1.3;
+    cursor:pointer; font-size:14px; padding:2px 6px; line-height:1.4;
     -webkit-tap-highlight-color:transparent; flex-shrink:0;
     transition:border-color .2s, background .2s;
-    display:flex; flex-direction:column; align-items:center; gap:1px;
   }
-  .jentry-outcome-btn::after {
-    content:'TAP'; font-family:'Press Start 2P',monospace; font-size:4px;
-    color:#333355; letter-spacing:.5px; line-height:1;
-  }
-  .jentry-outcome-btn:not([data-active])::after,
-  .jentry-outcome-btn[data-active=""]::after { content:'TAP'; }
+  .jentry-outcome-btn.undecided { color:#555577; font-size:11px; font-family:sans-serif; letter-spacing:0; }
   .jentry-outcome-btn:hover { border-color:#a78bfa; background:#1a1a34; }
-  .jentry-outcome-btn:hover::after { color:#a78bfa; }
+  .jentry-outcome-btn.undecided:hover { color:#a78bfa; }
 
   .jentry-teamname {
     flex:1; background:none; border:none; border-bottom:1px solid transparent;
@@ -537,7 +531,7 @@
     transition:border-color .2s, color .2s;
     user-select:text; -webkit-user-select:text;
   }
-  .jentry-teamname::placeholder { color:#252545; }
+  .jentry-teamname::placeholder { color:#444466; }
   .jentry-teamname:focus { border-bottom-color:#a78bfa55; }
   .jentry-teamname.has-name { color:#e0e0e0; font-size:7px; }
 
@@ -611,7 +605,7 @@
     overflow:hidden; transition:border-color .2s, color .2s;
     user-select:text; -webkit-user-select:text; min-height:24px;
   }
-  .jentry-notes::placeholder { color:#1e1e38; }
+  .jentry-notes::placeholder { color:#444466; }
   .jentry-notes:focus { border-color:#a78bfa44; color:#aaaacc; }
 
   /* Empty state */
@@ -1762,7 +1756,6 @@ document.getElementById('pool-input').addEventListener('blur', function() {
 // ─────────────────────────────────────────────────────────────────────────────
 // Journal
 // ─────────────────────────────────────────────────────────────────────────────
-const OUTCOME_CYCLE = ['', '🔥', '💀', '⚡'];
 
 let journalEntries = [];
 
@@ -1911,16 +1904,27 @@ function renderJournalEntry(entry) {
   const top = document.createElement('div');
   top.className = 'jentry-top';
 
+  const OUTCOME_ICONS = ['🔥', '💀', '⚡'];
   const outcomeBtn = document.createElement('button');
-  outcomeBtn.className = 'jentry-outcome-btn';
-  outcomeBtn.textContent = entry.outcome || '·';
-  outcomeBtn.title = 'Tap to cycle outcome';
+  outcomeBtn.title = 'Tap to mark outcome';
+
+  function refreshOutcomeBtn() {
+    if (!entry.outcome) {
+      outcomeBtn.className = 'jentry-outcome-btn undecided';
+      outcomeBtn.textContent = '?';
+    } else {
+      outcomeBtn.className = 'jentry-outcome-btn';
+      outcomeBtn.textContent = entry.outcome;
+    }
+  }
+  refreshOutcomeBtn();
+
   outcomeBtn.addEventListener('pointerdown', (e) => {
     e.preventDefault(); e.stopPropagation();
-    const idx = OUTCOME_CYCLE.indexOf(entry.outcome);
-    entry.outcome = OUTCOME_CYCLE[(idx + 1) % OUTCOME_CYCLE.length];
-    outcomeBtn.textContent = entry.outcome || '·';
-    el.className = 'jentry' + (entry.outcome === '🔥' ? ' outcome-fire' : entry.outcome === '💀' ? ' outcome-skull' : entry.outcome === '⚡' ? ' outcome-spark' : '');
+    const idx = OUTCOME_ICONS.indexOf(entry.outcome);
+    entry.outcome = OUTCOME_ICONS[(idx + 1) % OUTCOME_ICONS.length];
+    refreshOutcomeBtn();
+    el.className = 'jentry' + (entry.outcome === '🔥' ? ' outcome-fire' : entry.outcome === '💀' ? ' outcome-skull' : ' outcome-spark');
     saveJournal();
   });
 
