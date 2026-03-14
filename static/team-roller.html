@@ -503,7 +503,7 @@
   }
   #journal-panel-header h3 { font-size:8px; color:#a78bfa; letter-spacing:1px; }
   #journal-summary {
-    font-size:7px; color:#8888aa; letter-spacing:.5px; flex-shrink:0;
+    font-size:6px; color:#8888aa; letter-spacing:.5px; flex-shrink:0;
     text-align:right; line-height:2;
   }
 
@@ -746,6 +746,99 @@
     font-size:7px; color:#8888aa; text-align:right; letter-spacing:1px; flex-shrink:0;
   }
   #rules-total span { color:#a78bfa; }
+
+  /* ── Token modal ── */
+  #token-modal-backdrop {
+    position: fixed; inset: 0; background: #000000cc; z-index: 500;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  #token-modal-backdrop.hidden { display: none; }
+  #token-modal {
+    background: #0e0e1e; border: 1px solid #252545; border-radius: 12px;
+    padding: 20px 22px; max-width: 360px; width: 100%;
+    box-shadow: 0 16px 48px #00000088;
+    animation: fadeSlide .25s ease;
+  }
+  #token-modal h2 {
+    font-size: 9px; color: #a78bfa; letter-spacing: 2px;
+    margin-bottom: 10px; text-align: center;
+  }
+  #token-modal p {
+    font-size: 6px; color: #8888aa; line-height: 2.2; letter-spacing: .5px;
+    margin-bottom: 14px; text-align: center;
+  }
+  #token-modal p a { color: #a78bfa; }
+  #token-input {
+    width: 100%; background: #12122a; border: 1px solid #252545; border-radius: 6px;
+    color: #e0e0e0; font-family: 'Press Start 2P', monospace; font-size: 7px;
+    padding: 9px 10px; outline: none; margin-bottom: 10px;
+    letter-spacing: .5px; transition: border-color .2s;
+    user-select: text; -webkit-user-select: text;
+  }
+  #token-input:focus { border-color: #a78bfa; }
+  #token-input::placeholder { color: #444466; }
+  #token-modal-actions {
+    display: flex; gap: 8px; flex-direction: column;
+  }
+  .token-save-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+  }
+  .token-save-row label {
+    font-size: 6px; color: #666688; letter-spacing: .5px; cursor: pointer; flex: 1;
+  }
+  #token-remember {
+    accent-color: #a78bfa; cursor: pointer; flex-shrink: 0;
+  }
+  #token-confirm-btn {
+    width: 100%; background: linear-gradient(135deg, #7c3aed, #4f1d96);
+    color: #fff; font-family: 'Press Start 2P', monospace; font-size: 8px;
+    padding: 10px; border: none; border-radius: 6px; cursor: pointer;
+    letter-spacing: 1.5px; transition: opacity .15s;
+  }
+  #token-confirm-btn:hover { opacity: .85; }
+  #token-skip-btn {
+    width: 100%; background: none; border: 1px solid #252545; border-radius: 6px;
+    color: #444466; font-family: 'Press Start 2P', monospace; font-size: 7px;
+    padding: 8px; cursor: pointer; letter-spacing: 1px; transition: all .15s;
+  }
+  #token-skip-btn:hover { border-color: #444466; color: #8888aa; }
+
+  /* ── Sync status pill ── */
+  #sync-pill {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+    background: #12122a; border: 1px solid #252545; border-radius: 20px;
+    font-size: 6px; letter-spacing: 1px; padding: 5px 12px;
+    z-index: 300; pointer-events: none;
+    display: flex; align-items: center; gap: 6px;
+    transition: opacity .4s, transform .4s;
+    opacity: 0; transform: translateX(-50%) translateY(8px);
+    white-space: nowrap;
+  }
+  #sync-pill.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #sync-pill.syncing { border-color: #a78bfa44; color: #a78bfa; }
+  #sync-pill.done    { border-color: #22c55e44; color: #22c55e; }
+  #sync-pill.error   { border-color: #ef444455; color: #ef4444; }
+  #sync-dot {
+    width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0;
+  }
+  #sync-pill.syncing #sync-dot { animation: flash .6s linear infinite; }
+
+  /* ── Run selector in journal ── */
+  .run-selector {
+    display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  }
+  .run-selector label { font-size: 6px; color: #666688; letter-spacing: .5px; }
+  #run-number-input {
+    background: #12122a; border: 1px solid #252545; border-radius: 4px;
+    color: #a78bfa; font-family: 'Press Start 2P', monospace; font-size: 7px;
+    padding: 4px 5px; width: 38px; text-align: center; outline: none;
+    -moz-appearance: textfield; appearance: textfield; transition: border-color .2s;
+    user-select: text; -webkit-user-select: text;
+  }
+  #run-number-input:focus { border-color: #a78bfa; }
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
 </style>
 </head>
 <body>
@@ -781,6 +874,26 @@
 <!-- Screen overlay for mythical effects -->
 <div id="screen-overlay"></div>
 
+<!-- Token modal -->
+<div id="token-modal-backdrop">
+  <div id="token-modal">
+    <h2>☁ GIST SYNC</h2>
+    <p>Paste your GitHub fine-grained token to sync<br>the journal &amp; rules with your friend.<br>The token only needs Gist read+write access.</p>
+    <input id="token-input" type="password" placeholder="github_pat_..." autocomplete="off" spellcheck="false"/>
+    <div id="token-modal-actions">
+      <div class="token-save-row">
+        <input type="checkbox" id="token-remember"/>
+        <label for="token-remember">REMEMBER TOKEN IN THIS BROWSER</label>
+      </div>
+      <button id="token-confirm-btn">CONNECT</button>
+      <button id="token-skip-btn">SKIP — PLAY OFFLINE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sync status pill -->
+<div id="sync-pill"><div id="sync-dot"></div><span id="sync-label">SYNCING</span></div>
+
 <!-- Journal button -->
 <button id="journal-btn" title="Run journal">
   📖
@@ -791,6 +904,10 @@
 <div id="journal-panel">
   <div id="journal-panel-header">
     <h3>RUN JOURNAL</h3>
+    <div class="run-selector">
+      <label for="run-number-input">RUN</label>
+      <input id="run-number-input" type="number" min="1" max="99" value="1"/>
+    </div>
     <div id="journal-summary"></div>
   </div>
   <div id="journal-entries">
@@ -1030,6 +1147,12 @@ function triggerMythicalBuffOverlay() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Gist sync config
+// ─────────────────────────────────────────────────────────────────────────────
+const GIST_ID       = '0c1ecc86b69baeab01dcd3abe72c91c7';
+const GIST_FILENAME = 'soullink-data.json';
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Storage helpers
 // ─────────────────────────────────────────────────────────────────────────────
 function saveData(key, value) {
@@ -1054,6 +1177,142 @@ function loadData(key) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Sync indicator
+// ─────────────────────────────────────────────────────────────────────────────
+const syncPill  = document.getElementById('sync-pill');
+const syncLabel = document.getElementById('sync-label');
+let syncHideTimer = null;
+
+function showSync(state, msg) {
+  // state: 'syncing' | 'done' | 'error'
+  clearTimeout(syncHideTimer);
+  syncPill.className = 'show ' + state;
+  syncLabel.textContent = msg || (state === 'syncing' ? 'PREPARING TO SYNC' : state === 'done' ? 'SAVED' : 'SYNC ERROR');
+  if (state !== 'syncing') {
+    syncHideTimer = setTimeout(() => {
+      syncPill.classList.remove('show');
+    }, state === 'error' ? 4000 : 1800);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Token management
+// ─────────────────────────────────────────────────────────────────────────────
+function getToken() {
+  return sessionStorage.getItem('soullink_gh_token') || localStorage.getItem('soullink_gh_token') || null;
+}
+
+function setToken(token, remember) {
+  sessionStorage.setItem('soullink_gh_token', token);
+  if (remember) localStorage.setItem('soullink_gh_token', token);
+  else          localStorage.removeItem('soullink_gh_token');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Gist API
+// ─────────────────────────────────────────────────────────────────────────────
+async function gistFetch(payload = null) {
+  const token = getToken();
+  if (!token) return null;
+  const opts = {
+    method: payload ? 'PATCH' : 'GET',
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
+  };
+  if (payload) opts.body = JSON.stringify({ files: { [GIST_FILENAME]: { content: JSON.stringify(payload, null, 2) } } });
+  const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, opts);
+  if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+  if (payload) return null;
+  const data = await res.json();
+  const raw = data.files?.[GIST_FILENAME]?.content;
+  return raw ? JSON.parse(raw) : {};
+}
+
+// Debounced push
+let syncTimer = null;
+function schedulePush() {
+  if (!getToken()) return;
+  clearTimeout(syncTimer);
+  showSync('syncing');
+  syncTimer = setTimeout(pushToGist, 10000);
+}
+
+async function pushToGist() {
+  const token = getToken();
+  if (!token) { syncPill.classList.remove('show'); return; }
+  try {
+    const payload = buildGistPayload();
+    await gistFetch(payload);
+    showSync('done');
+  } catch(e) {
+    showSync('error', 'SYNC FAILED');
+    console.error('Gist push failed:', e);
+  }
+}
+
+function buildGistPayload() {
+  // Merge all runs from local cache, then overwrite current run
+  const cached = loadData('soullink_gist_cache') || {};
+  cached.rules = rules;
+  const runKey = `run_${currentRun}`;
+  cached[runKey] = {
+    journal: journalEntries,
+    teamCount: teamCount,
+  };
+  // Store back to local cache
+  saveData('soullink_gist_cache', cached);
+  return cached;
+}
+
+async function pullFromGist() {
+  const token = getToken();
+  if (!token) return;
+  showSync('syncing', 'LOADING');
+  try {
+    const remote = await gistFetch();
+    if (!remote) { showSync('done', 'OFFLINE'); return; }
+
+    // Save full remote as local cache
+    saveData('soullink_gist_cache', remote);
+
+    // Apply rules
+    if (Array.isArray(remote.rules) && remote.rules.length) {
+      rules = normalizeRules(remote.rules);
+      saveData('soullink_rules', rules);
+      if (panelOpen) renderRulesPanel();
+    }
+
+    // Apply current run data
+    applyRunData(remote, currentRun);
+    showSync('done', 'LOADED');
+  } catch(e) {
+    showSync('error', 'LOAD FAILED');
+    console.error('Gist pull failed:', e);
+  }
+}
+
+function applyRunData(remote, run) {
+  const runKey = `run_${run}`;
+  const runData = remote[runKey];
+  if (runData) {
+    if (Array.isArray(runData.journal)) {
+      journalEntries = runData.journal;
+      saveData('soullink_journal', journalEntries);
+    }
+    if (typeof runData.teamCount === 'number') {
+      teamCount = runData.teamCount;
+      teamCountInput.value = teamCount;
+      saveData('soullink_team_count', teamCount);
+    }
+  } else {
+    // No data for this run yet — start fresh
+    journalEntries = [];
+    saveData('soullink_journal', []);
+  }
+  updateJournalBadge();
+  if (journalOpen) renderJournalEntries();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Rules state
 // ─────────────────────────────────────────────────────────────────────────────
 function normalizeRules(raw) {
@@ -1067,7 +1326,7 @@ function normalizeRules(raw) {
 
 let rules = normalizeRules(loadData('soullink_rules'));
 
-function saveRules() { saveData('soullink_rules', rules); }
+function saveRules() { saveData('soullink_rules', rules); schedulePush(); }
 
 function rollRule() {
   if (!rules.length) return null;
@@ -1649,6 +1908,7 @@ teamCountInput.addEventListener('change', () => {
   teamCount = isNaN(v) ? 0 : Math.max(0, v);
   teamCountInput.value = teamCount;
   saveData('soullink_team_count', teamCount);
+  schedulePush();
 });
 
 teamCountInput.addEventListener('blur', () => {
@@ -1786,6 +2046,7 @@ function loadJournal() {
 
 function saveJournal() {
   saveData('soullink_journal', journalEntries);
+  schedulePush();
 }
 
 function addJournalEntry(slots, shinys, ruleResult, teamNum) {
@@ -2049,7 +2310,7 @@ function renderJournalEntry(entry) {
   // Notes
   const notes = document.createElement('textarea');
   notes.className = 'jentry-notes';
-  notes.placeholder = 'what happened this gym...';
+  notes.placeholder = 'what happened...';
   notes.value = entry.notes || '';
   notes.rows = 1;
   notes.spellcheck = false;
@@ -2121,9 +2382,89 @@ document.addEventListener('pointerdown', () => {
   journalPanel.classList.remove('open');
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Run number
+// ─────────────────────────────────────────────────────────────────────────────
+let currentRun = parseInt(loadData('soullink_current_run') || '1', 10) || 1;
+const runNumberInput = document.getElementById('run-number-input');
+runNumberInput.value = currentRun;
+
+runNumberInput.addEventListener('change', () => {
+  const v = parseInt(runNumberInput.value, 10);
+  currentRun = isNaN(v) ? 1 : Math.max(1, Math.min(99, v));
+  runNumberInput.value = currentRun;
+  saveData('soullink_current_run', currentRun);
+  // Load data for this run from gist cache (or local)
+  const cached = loadData('soullink_gist_cache');
+  if (cached) {
+    applyRunData(cached, currentRun);
+  } else {
+    journalEntries = [];
+    updateJournalBadge();
+    if (journalOpen) renderJournalEntries();
+  }
+  // Also sync team count from local for this run key (if no gist)
+  const storedCount = loadData(`soullink_team_count_run${currentRun}`);
+  if (storedCount !== null) {
+    teamCount = parseInt(storedCount, 10) || 0;
+    teamCountInput.value = teamCount;
+  }
+  // Pull fresh from gist for this run
+  pullFromGist();
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Token modal
+// ─────────────────────────────────────────────────────────────────────────────
+const tokenBackdrop   = document.getElementById('token-modal-backdrop');
+const tokenInput      = document.getElementById('token-input');
+const tokenRemember   = document.getElementById('token-remember');
+const tokenConfirmBtn = document.getElementById('token-confirm-btn');
+const tokenSkipBtn    = document.getElementById('token-skip-btn');
+
+function closeTokenModal() {
+  tokenBackdrop.classList.add('hidden');
+}
+
+tokenConfirmBtn.addEventListener('pointerdown', async (e) => {
+  e.preventDefault();
+  const tok = tokenInput.value.trim();
+  if (!tok) { tokenInput.focus(); return; }
+  setToken(tok, tokenRemember.checked);
+  closeTokenModal();
+  await pullFromGist();
+});
+
+tokenSkipBtn.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  closeTokenModal();
+});
+
+// Pre-fill if remembered
+const existingToken = getToken();
+if (existingToken) {
+  tokenInput.value = existingToken;
+  tokenRemember.checked = !!localStorage.getItem('soullink_gh_token');
+  closeTokenModal();
+} else {
+  // Show modal — prevent backdrop close via document pointerdown
+  tokenBackdrop.addEventListener('pointerdown', (e) => {
+    if (e.target === tokenBackdrop) { /* don't close on backdrop click — token is important */ }
+  });
+}
+
+// Stop modal content clicks from propagating to document close listeners
+document.getElementById('token-modal').addEventListener('pointerdown', e => e.stopPropagation());
+tokenBackdrop.addEventListener('pointerdown', e => e.stopPropagation());
+
 // ── Init journal ──
 journalEntries = loadJournal();
 updateJournalBadge();
+
+// Pull from gist on load if token exists
+if (existingToken) {
+  pullFromGist();
+}
 </script>
 </body>
 </html>
