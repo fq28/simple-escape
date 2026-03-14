@@ -179,6 +179,38 @@
   }
   .num-card:active { transform:scale(.96); }
   .num-card.rerolling { animation: flash .18s linear 3; }
+
+  /* ── Party-roll highlight (applied when a [PARTY] token resolves) ── */
+  @keyframes partySlotIn {
+    0%   { transform: scale(1.18); }
+    55%  { transform: scale(0.95); }
+    80%  { transform: scale(1.04); }
+    100% { transform: scale(1); }
+  }
+  /* Curse tints */
+  .num-card.party-mythical-curse   { background:#100006; border-color:#dc2626; animation: partySlotIn .4s cubic-bezier(.36,.07,.19,.97) both; box-shadow: 0 5px 0 #000, 0 0 40px #dc262688, 0 0 80px #7f000044; }
+  .num-card.party-legendary-curse  { background:#0d0500; border-color:#f97316; animation: partySlotIn .36s cubic-bezier(.36,.07,.19,.97) both; box-shadow: 0 5px 0 #000, 0 0 28px #f9731666; }
+  .num-card.party-ultra-curse      { background:#0a0514; border-color:#7c3aed; animation: partySlotIn .32s cubic-bezier(.36,.07,.19,.97) both; box-shadow: 0 5px 0 #000, 0 0 22px #7c3aed55; }
+  .num-card.party-rare-curse       { background:#0f0606; border-color:#ef4444; animation: partySlotIn .28s ease both; box-shadow: 0 5px 0 #000, 0 0 16px #ef444444; }
+  .num-card.party-uncommon-curse   { background:#0c0606; border-color:#dc262655; animation: partySlotIn .24s ease both; box-shadow: 0 5px 0 #000, 0 0 10px #dc262633; }
+  .num-card.party-common-curse     { background:#0c0606; border-color:#dc262633; animation: partySlotIn .2s ease both; box-shadow: 0 5px 0 #000, 0 0 6px #dc262622; }
+  .num-card.party-frequent-curse   { background:#0b0505; border-color:#dc262622; animation: partySlotIn .18s ease both; }
+  .num-card.party-guaranteed-curse { background:#0b0505; border-color:#52181822; animation: partySlotIn .16s ease both; }
+  /* Buff tints */
+  .num-card.party-mythical-buff    { background:#00080f; border-color:#67e8f9; animation: partySlotIn .4s cubic-bezier(.22,.61,.36,1) both; box-shadow: 0 5px 0 #000, 0 0 40px #67e8f988, 0 0 80px #0e749944; }
+  .num-card.party-legendary-buff   { background:#001209; border-color:#34d399; animation: partySlotIn .36s cubic-bezier(.22,.61,.36,1) both; box-shadow: 0 5px 0 #000, 0 0 28px #34d39966; }
+  .num-card.party-ultra-buff       { background:#00080f; border-color:#0891b2; animation: partySlotIn .32s cubic-bezier(.22,.61,.36,1) both; box-shadow: 0 5px 0 #000, 0 0 22px #0891b255; }
+  .num-card.party-rare-buff        { background:#020f05; border-color:#16a34a; animation: partySlotIn .28s ease both; box-shadow: 0 5px 0 #000, 0 0 16px #16a34a44; }
+  .num-card.party-uncommon-buff    { background:#020c08; border-color:#0d948055; animation: partySlotIn .24s ease both; box-shadow: 0 5px 0 #000, 0 0 10px #0d948033; }
+  .num-card.party-common-buff      { background:#020c05; border-color:#16a34a33; animation: partySlotIn .2s ease both; box-shadow: 0 5px 0 #000, 0 0 6px #16a34a22; }
+  .num-card.party-frequent-buff    { background:#020c05; border-color:#16a34a22; animation: partySlotIn .18s ease both; }
+  .num-card.party-guaranteed-buff  { background:#020c05; border-color:#18522222; animation: partySlotIn .16s ease both; }
+
+  /* Persistent pulse for mythical/legendary */
+  .num-card.party-mythical-curse  { animation: partySlotIn .4s cubic-bezier(.36,.07,.19,.97) both, pulseMythicCurse 1.8s ease-in-out .45s infinite; }
+  .num-card.party-legendary-curse { animation: partySlotIn .36s cubic-bezier(.36,.07,.19,.97) both, pulseLegendaryCurse 1.6s ease-in-out .4s 4; }
+  .num-card.party-mythical-buff   { animation: partySlotIn .4s cubic-bezier(.22,.61,.36,1) both, pulseMythicBuff 2s ease-in-out .45s infinite; }
+  .num-card.party-legendary-buff  { animation: partySlotIn .36s cubic-bezier(.22,.61,.36,1) both, pulseLegendaryBuff 1.6s ease-in-out .4s 4; }
   .card-slot { font-size:9px; margin-bottom:7px; letter-spacing:1px; }
   .card-num  { font-size:26px; line-height:1; color:#e8e8e8; transition:color .1s, font-size .1s, text-shadow .1s; }
   .card-num.empty   { font-size:18px; color:#222244; }
@@ -639,6 +671,25 @@
   }
   .jentry-chip:hover { border-color:#a78bfa55; }
   .jentry-chip.shiny-chip { border-color:#fbbf2466; background:#110e02; }
+
+  /* ── Party-roll highlight on journal chips ── */
+  .jentry-chip.party-mythical-curse   { background:#100006 !important; border-color:#dc2626 !important; box-shadow: 0 0 14px #dc262677, 0 0 30px #7f000033; animation: pulseMythicCurse 1.8s ease-in-out infinite; }
+  .jentry-chip.party-legendary-curse  { background:#0d0500 !important; border-color:#f97316 !important; box-shadow: 0 0 10px #f9731655; }
+  .jentry-chip.party-ultra-curse      { background:#0a0514 !important; border-color:#7c3aed !important; box-shadow: 0 0 7px #7c3aed44; }
+  .jentry-chip.party-rare-curse       { background:#0f0606 !important; border-color:#ef4444 !important; box-shadow: 0 0 5px #ef444433; }
+  .jentry-chip.party-uncommon-curse   { background:#0c0606 !important; border-color:#dc262644 !important; }
+  .jentry-chip.party-common-curse     { background:#0c0606 !important; border-color:#dc262630 !important; }
+  .jentry-chip.party-frequent-curse   { background:#0b0505 !important; border-color:#dc262620 !important; }
+  .jentry-chip.party-guaranteed-curse { background:#0b0505 !important; border-color:#52181818 !important; }
+
+  .jentry-chip.party-mythical-buff    { background:#00080f !important; border-color:#67e8f9 !important; box-shadow: 0 0 14px #67e8f977, 0 0 30px #0e749933; animation: pulseMythicBuff 2s ease-in-out infinite; }
+  .jentry-chip.party-legendary-buff   { background:#001209 !important; border-color:#34d399 !important; box-shadow: 0 0 10px #34d39955; }
+  .jentry-chip.party-ultra-buff       { background:#00080f !important; border-color:#0891b2 !important; box-shadow: 0 0 7px #0891b244; }
+  .jentry-chip.party-rare-buff        { background:#020f05 !important; border-color:#16a34a !important; box-shadow: 0 0 5px #16a34a33; }
+  .jentry-chip.party-uncommon-buff    { background:#020c08 !important; border-color:#0d948044 !important; }
+  .jentry-chip.party-common-buff      { background:#020c05 !important; border-color:#16a34a30 !important; }
+  .jentry-chip.party-frequent-buff    { background:#020c05 !important; border-color:#16a34a20 !important; }
+  .jentry-chip.party-guaranteed-buff  { background:#020c05 !important; border-color:#18522218 !important; }
   .jentry-chip-num {
     font-size:8px; font-family:'Press Start 2P',monospace;
     line-height:1; pointer-events:none;
@@ -1517,6 +1568,26 @@ function clearAllShiny() {
   }
 }
 
+const PARTY_HIGHLIGHT_CLASS_RE = /\bparty-\S+/g;
+
+function applyPartyHighlight(slotIdx, tier, type) {
+  // slotIdx is 1-based from PARTY roll, card data-idx is 0-based
+  const card = document.querySelector(`.num-card[data-idx="${slotIdx - 1}"]`);
+  if (!card) return;
+  // Remove any existing party highlight
+  card.className = card.className.replace(PARTY_HIGHLIGHT_CLASS_RE, '').trim();
+  // Force reflow so animation re-triggers if same class
+  void card.offsetWidth;
+  card.classList.add(`party-${tier}-${type}`);
+}
+
+function clearAllPartyHighlights() {
+  for (let i = 0; i < 6; i++) {
+    const card = document.querySelector(`.num-card[data-idx="${i}"]`);
+    if (card) card.className = card.className.replace(PARTY_HIGHLIGHT_CLASS_RE, '').trim();
+  }
+}
+
 function rollShinySlots() {
   shinySlots = Array.from({ length: 6 }, () => Math.random() < SHINY_CHANCE);
 }
@@ -1726,7 +1797,7 @@ function buildRuleTextDOM(text, tier, type, entryRule, onRolled) {
                 setTimeout(() => playRuleSfx(tier, type), 120);
               }
               // rolling stays true — chip is permanently locked
-              onRolled && onRolled(ti, finalVal);
+              onRolled && onRolled(ti, finalVal, tokenType);
             }, drama.pauseMs);
           }
         }
@@ -1783,13 +1854,18 @@ function showRuleBox(result) {
       textEl.innerHTML = '';
       // The journal entry for this roll will be at journalEntries[0] after addJournalEntry runs
       // We pass a callback that saves into the most recent entry
-      const dom = buildRuleTextDOM(result.text, tier, type, null, (ti, val) => {
+      const dom = buildRuleTextDOM(result.text, tier, type, null, (ti, val, tokenType) => {
         const entry = journalEntries[0];
         if (!entry || !entry.rule) return;
         if (!entry.rule.rolls) entry.rule.rolls = {};
         entry.rule.rolls[ti] = val;
         saveJournal();
         if (journalOpen) renderJournalEntries();
+        // Highlight affected party slots on the card grid
+        if (tokenType === 'PARTY') {
+          const slots = Array.isArray(val) ? val : [val];
+          slots.forEach(s => applyPartyHighlight(s, tier, type));
+        }
       });
       textEl.appendChild(dom);
     } else {
@@ -1820,6 +1896,7 @@ function roll() {
   rolling = true;
   hideRuleBox();
   clearAllShiny();
+  clearAllPartyHighlights();
   // Reset charge bar
   const cb = document.getElementById('charge-bar');
   cb.style.transition = 'none'; cb.style.width = '0%'; cb.classList.remove('full');
@@ -2416,9 +2493,32 @@ const TIER_RULE_COLORS = {
   'guaranteed-buff':  { bg:'#0a0a0a', border:'#18522212', label:'#4a9e6a', text:'#e8e8e8' },
 };
 
+// Returns a map of 1-based slot number → { tier, type } for any PARTY rolls in this entry
+function getEntryPartyHighlights(entry) {
+  const map = {};
+  if (!entry.rule?.rolls || !entry.rule?.text) return map;
+  const parts = parseTokens(entry.rule.text);
+  let ti = 0;
+  for (const part of parts) {
+    if (part.type !== 'token') continue;
+    const idx = ti++;
+    if (part.tokenType !== 'PARTY') continue;
+    const val = entry.rule.rolls[idx];
+    if (val === undefined) continue;
+    const slots = Array.isArray(val) ? val : [val];
+    for (const s of slots) map[s] = { tier: entry.rule.tier, type: entry.rule.type };
+  }
+  return map;
+}
+
 function makeChip(entry, slotIdx) {
   const chip = document.createElement('div');
-  chip.className = 'jentry-chip' + (entry.shinys[slotIdx] ? ' shiny-chip' : '');
+  const partyHighlights = getEntryPartyHighlights(entry);
+  const highlight = partyHighlights[slotIdx + 1]; // slotIdx is 0-based, highlights use 1-based
+  const isShiny = entry.shinys[slotIdx];
+  chip.className = 'jentry-chip'
+    + (isShiny ? ' shiny-chip' : '')
+    + (highlight && !isShiny ? ` party-${highlight.tier}-${highlight.type}` : '');
 
   const slotColor = COLORS[slotIdx] || '#e0e0e0';
 
@@ -2601,6 +2701,7 @@ function renderJournalEntry(entry) {
         if (!entry.rule.rolls) entry.rule.rolls = {};
         entry.rule.rolls[ti] = val;
         saveJournal();
+        if (journalOpen) renderJournalEntries();
       });
       ruleText.appendChild(dom);
     } else {
