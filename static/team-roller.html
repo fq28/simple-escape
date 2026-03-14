@@ -1761,14 +1761,14 @@ function hasTokens(text) {
 
 // Tier → roll dramatics config
 const ROLL_DRAMA = {
-  mythical:   { ticks: 38, tickMs: 90,  pauseMs: 220 },
-  legendary:  { ticks: 28, tickMs: 70,  pauseMs: 160 },
-  ultra:      { ticks: 20, tickMs: 55,  pauseMs: 120 },
-  rare:       { ticks: 14, tickMs: 45,  pauseMs: 80  },
-  uncommon:   { ticks: 10, tickMs: 38,  pauseMs: 60  },
-  common:     { ticks: 7,  tickMs: 30,  pauseMs: 40  },
-  frequent:   { ticks: 5,  tickMs: 22,  pauseMs: 20  },
-  guaranteed: { ticks: 3,  tickMs: 16,  pauseMs: 0   },
+  mythical:   { ticks: 48, tickMs: 75,  pauseMs: 520 },
+  legendary:  { ticks: 38, tickMs: 62,  pauseMs: 400 },
+  ultra:      { ticks: 30, tickMs: 50,  pauseMs: 300 },
+  rare:       { ticks: 22, tickMs: 40,  pauseMs: 220 },
+  uncommon:   { ticks: 17, tickMs: 33,  pauseMs: 180 },
+  common:     { ticks: 13, tickMs: 26,  pauseMs: 150 },
+  frequent:   { ticks: 10, tickMs: 20,  pauseMs: 110 },
+  guaranteed: { ticks: 7,  tickMs: 15,  pauseMs: 70  },
 };
 
 function getTokenLabel(tokenType, tokenArg) {
@@ -1894,14 +1894,26 @@ function buildRuleTextDOM(text, tier, type, entryRule, onRolled) {
         initAudio();
 
         function doTick() {
-          const interim = tickTokenValue(tokenType, resolvedArg);
-          chip.textContent = getTokenResultLabel(tokenType, resolvedArg, interim);
-          playNote(180 + ticks * 18, 0, 0.06, 0.08, 'triangle', 280 + ticks * 22);
-          ticks++;
+          // In the last 2 ticks, occasionally flash the final value for a near-miss feel
           const remaining = drama.ticks - ticks;
-          const delay = ticks < drama.ticks * 0.6
+          const nearEnd = remaining <= 2;
+          const interim = (nearEnd && ticks % 2 === 0)
+            ? finalVal
+            : tickTokenValue(tokenType, resolvedArg);
+          chip.textContent = getTokenResultLabel(tokenType, resolvedArg, interim);
+
+          // Exponential slowdown in the last 55% of ticks
+          const slowStart = drama.ticks * 0.45;
+          const delay = ticks < slowStart
             ? drama.tickMs
-            : drama.tickMs + (drama.ticks - ticks) * 12;
+            : drama.tickMs + Math.pow((ticks - slowStart) / (drama.ticks - slowStart), 2.4) * drama.tickMs * 6;
+
+          // Audio: pitch tracks speed — high & fast early, low & slow near the end
+          const speedRatio = drama.tickMs / delay; // 1 = full speed, <1 = slowing
+          const noteFreq = 120 + speedRatio * 380;
+          playNote(noteFreq, 0, 0.055, delay * 0.55, 'triangle', noteFreq * 1.06);
+
+          ticks++;
 
           if (remaining > 0) {
             setTimeout(doTick, delay);
