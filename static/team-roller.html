@@ -1313,6 +1313,15 @@ function rerollSlot(idx) {
         applyShiny(idx);
         sfxShiny();
       }
+      // Update most recent journal entry for this slot
+      if (journalEntries.length) {
+        const latest = journalEntries[0];
+        latest.slots[idx]  = newVal;
+        latest.shinys[idx] = shinySlots[idx];
+        latest.names[idx]  = '';  // clear any typed name since the mon changed
+        saveJournal();
+        if (journalOpen) renderJournalEntries();
+      }
     }
   }, 55);
 }
