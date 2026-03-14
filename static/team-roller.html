@@ -1241,7 +1241,7 @@ function schedulePush() {
   if (!getToken()) return;
   clearTimeout(syncTimer);
   showSync('syncing');
-  syncTimer = setTimeout(pushToGist, 10000);
+  syncTimer = setTimeout(pushToGist, 1700);
 }
 
 async function pushToGist() {
