@@ -417,6 +417,21 @@
   }
   #rule-text.has-rule { color:#e8e8e8; }
 
+  /* ── Tier display pill ── */
+  .rule-tier-pill {
+    border-radius: 20px; font-family: 'Press Start 2P', monospace; font-size: 6px;
+    padding: 3px 7px; letter-spacing: 1px; flex-shrink: 0; pointer-events: none;
+    border: 1px solid; white-space: nowrap;
+  }
+  .rule-tier-pill.tier-mythical   { color: #dc2626; border-color: #7f000066; background: #08000a; }
+  .rule-tier-pill.tier-legendary  { color: #f97316; border-color: #f9731644; background: #0d0500; }
+  .rule-tier-pill.tier-ultra      { color: #a78bfa; border-color: #7c3aed44; background: #0a0514; }
+  .rule-tier-pill.tier-rare       { color: #f87171; border-color: #ef444433; background: #0f0606; }
+  .rule-tier-pill.tier-uncommon   { color: #2dd4bf; border-color: #0d948033; background: #020c08; }
+  .rule-tier-pill.tier-common     { color: #4ade80; border-color: #16a34a22; background: #020f05; }
+  .rule-tier-pill.tier-frequent   { color: #888899; border-color: #44444433; background: #0a0a0a; }
+  .rule-tier-pill.tier-guaranteed { color: #555566; border-color: #33333322; background: #0a0a0a; }
+
   /* ── Buff/Curse pill toggle ── */
   .rule-type-pill {
     border: none; border-radius: 20px; cursor: pointer;
@@ -684,14 +699,6 @@
     align-items: center;
     gap: 5px;
   }
-  .rule-move {
-    background: none; border: 1px solid #1e1e38; border-radius: 3px;
-    color: #555577; cursor: pointer;
-    font-size: 10px; padding: 3px 5px; line-height: 1;
-    font-family: sans-serif; transition: all .15s; flex-shrink: 0;
-  }
-  .rule-move:hover:not(:disabled) { border-color:#a78bfa; color:#a78bfa; }
-  .rule-move:disabled { opacity: .18; cursor: default; }
 
   .rule-pct-input {
     width:46px; background:#12122a; border:1px solid #1e1e38; border-radius:4px;
@@ -703,7 +710,7 @@
   .rule-pct-input:focus { border-color:#a78bfa; }
   input[type=number]::-webkit-inner-spin-button,
   input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
-  .pct-label { font-size:7px; color:#555577; flex-shrink:0; }
+  .pct-label { font-size:7px; color:#a78bfa; flex-shrink:0; }
   .rule-del {
     background:none; border:none; color:#2a2a44; cursor:pointer;
     font-size:12px; padding:2px 4px; line-height:1;
@@ -798,8 +805,8 @@
 <div id="rules-panel">
   <h3>SPECIAL RULES</h3>
   <div id="panel-toolbar">
-    <button class="toolbar-btn" id="sort-rarity-btn" title="Sort by rarity (rarest first)">↓ RARITY</button>
-    <button class="toolbar-btn" id="sort-type-btn"   title="Sort by type (curses then buffs)">↓ TYPE</button>
+    <button class="toolbar-btn" id="sort-rarity-btn" title="Sort by rarity">↓ RAREST</button>
+    <button class="toolbar-btn" id="sort-type-btn"   title="Sort by type">↓ CURSES</button>
     <button class="toolbar-btn export-btn" id="export-btn" title="Export rules as CSV">↑ EXPORT</button>
     <button class="toolbar-btn import-btn" id="import-btn" title="Import rules from CSV">↓ IMPORT</button>
     <input type="file" id="import-file" accept=".csv,text/csv"/>
@@ -1385,29 +1392,6 @@ function renderRulesPanel() {
     const controls = document.createElement('div');
     controls.className = 'rule-controls';
 
-    const upBtn = document.createElement('button');
-    upBtn.className   = 'rule-move';
-    upBtn.textContent = '↑';
-    upBtn.title       = 'Move up';
-    upBtn.disabled    = i === 0;
-    upBtn.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      if (i === 0) return;
-      [rules[i-1], rules[i]] = [rules[i], rules[i-1]];
-      saveRules(); renderRulesPanel();
-    });
-
-    const downBtn = document.createElement('button');
-    downBtn.className   = 'rule-move';
-    downBtn.textContent = '↓';
-    downBtn.title       = 'Move down';
-    downBtn.disabled    = i === rules.length - 1;
-    downBtn.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      if (i === rules.length - 1) return;
-      [rules[i], rules[i+1]] = [rules[i+1], rules[i]];
-      saveRules(); renderRulesPanel();
-    });
 
     // % input
     const pctIn = document.createElement('input');
@@ -1433,33 +1417,23 @@ function renderRulesPanel() {
         if (next) { e.preventDefault(); next.querySelector('.rule-text-input').focus(); }
       }
       if (e.key === 'Tab' && e.shiftKey) { e.preventDefault(); textIn.focus(); }
-      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-        e.preventDefault();
-        const cur   = parseFloat(pctIn.value.replace(',', '.')) || 0;
-        const delta = e.shiftKey ? 5 : 0.5;
-        const next  = parseFloat((cur + (e.key === 'ArrowUp' ? delta : -delta)).toFixed(1));
-        pctIn.value = formatPct(Math.max(0, Math.min(100, next)));
-        rules[i].pct = parseFloat(pctIn.value);
-        saveRules();
-        updateTotal();
-      }
-      if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
-        e.preventDefault();
-        const dir = e.key === 'ArrowUp' ? -1 : 1;
-        const j   = i + dir;
-        if (j < 0 || j >= rules.length) return;
-        [rules[i], rules[j]] = [rules[j], rules[i]];
-        saveRules();
-        renderRulesPanel();
-        requestAnimationFrame(() => {
-          list.children[j]?.querySelector('.rule-pct-input')?.focus();
-        });
-      }
     });
 
     const pctLbl = document.createElement('span');
     pctLbl.className   = 'pct-label';
     pctLbl.textContent = '%';
+
+    // ── Tier pill ──
+    const tierPill = document.createElement('span');
+    tierPill.className = 'rule-tier-pill';
+    function refreshTierPill(pct) {
+      const tier = getRuleTierFixed(parseFloat(pct) || 0);
+      tierPill.className   = 'rule-tier-pill tier-' + tier;
+      tierPill.textContent = TIER_NAMES[tier];
+    }
+    refreshTierPill(rule.pct);
+    pctIn.addEventListener('input',  () => refreshTierPill(pctIn.value.replace(',', '.')));
+    pctIn.addEventListener('blur',   () => refreshTierPill(rules[i].pct));
 
     // ── Buff/Curse pill ──
     const pill = document.createElement('button');
@@ -1485,10 +1459,9 @@ function renderRulesPanel() {
       renderRulesPanel();
     });
 
-    controls.appendChild(upBtn);
-    controls.appendChild(downBtn);
     controls.appendChild(pctIn);
     controls.appendChild(pctLbl);
+    controls.appendChild(tierPill);
     controls.appendChild(pill);
     controls.appendChild(del);
 
@@ -1552,22 +1525,38 @@ document.addEventListener('pointerdown', (e) => {
 // ── Sort ──
 const TIER_ORDER = ['mythical','legendary','ultra','rare','uncommon','common','frequent','guaranteed'];
 
-document.getElementById('sort-rarity-btn').addEventListener('pointerdown', (e) => {
-  e.preventDefault();
-  rules.sort((a, b) => TIER_ORDER.indexOf(getRuleTierFixed(a.pct)) - TIER_ORDER.indexOf(getRuleTierFixed(b.pct)));
-  saveRules(); renderRulesPanel();
-});
+// sortRarityDir: 'rarest' = mythical first, 'common' = guaranteed first
+let sortRarityDir = 'rarest';
+const sortRarityBtn = document.getElementById('sort-rarity-btn');
 
-document.getElementById('sort-type-btn').addEventListener('pointerdown', (e) => {
-  e.preventDefault();
-  // curses first, then buffs; preserve relative order within each group
+function applyRaritySort() {
+  // Sort by raw % — 1% (rarest) to 100% (most common)
+  rules.sort((a, b) => sortRarityDir === 'rarest' ? a.pct - b.pct : b.pct - a.pct);
+  sortRarityDir = sortRarityDir === 'rarest' ? 'common' : 'rarest';
+  sortRarityBtn.textContent = sortRarityDir === 'rarest' ? '↓ RAREST' : '↓ COMMON';
+  saveRules(); renderRulesPanel();
+}
+sortRarityBtn.textContent = '↓ RAREST';
+sortRarityBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); applyRaritySort(); });
+
+// sortTypeDir: 'curse' = curses first, 'buff' = buffs first
+let sortTypeDir = 'curse';
+const sortTypeBtn = document.getElementById('sort-type-btn');
+
+function applyTypeSort() {
+  // Sort by type, then rarest-first within each group
   rules.sort((a, b) => {
     const ta = a.type === 'buff' ? 1 : 0;
     const tb = b.type === 'buff' ? 1 : 0;
-    return ta - tb;
+    const typeDiff = sortTypeDir === 'curse' ? ta - tb : tb - ta;
+    return typeDiff !== 0 ? typeDiff : a.pct - b.pct;
   });
+  sortTypeDir = sortTypeDir === 'curse' ? 'buff' : 'curse';
+  sortTypeBtn.textContent = sortTypeDir === 'curse' ? '↓ CURSES' : '↓ BUFFS';
   saveRules(); renderRulesPanel();
-});
+}
+sortTypeBtn.textContent = '↓ CURSES';
+sortTypeBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); applyTypeSort(); });
 
 // ── Export CSV ──
 document.getElementById('export-btn').addEventListener('pointerdown', (e) => {
