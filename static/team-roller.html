@@ -64,12 +64,12 @@
   }
   .num-card.shiny .card-num { animation: shinyNum 2s ease-in-out infinite; }
   .num-card.shiny::after {
-    content: '✦ SHINY';
+    content: 'SHINY';
     position: absolute;
     bottom: 6px; left: 50%;
     transform: translateX(-50%);
     font-size: 5px; letter-spacing: 1.5px; color: #fbbf24;
-    white-space: nowrap;
+    white-space: nowrap;  
     animation: shinyBadge .5s ease .15s both;
   }
 
@@ -449,6 +449,177 @@
   #cog-btn:hover  { border-color:#ef4444; color:#ef4444; }
   #cog-btn.open   { background:#ef4444; border-color:#ef4444; color:#fff; transform:rotate(45deg); }
 
+  /* ── Journal button ── */
+  #journal-btn {
+    position:fixed; bottom:14px; left:14px;
+    width:32px; height:32px; border-radius:50%;
+    background:#12122a; border:1px solid #252545;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    color:#444466; font-size:13px; transition:all .2s;
+    -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+    z-index:100; flex-direction:column; gap:0; position:fixed;
+  }
+  #journal-btn:hover { border-color:#a78bfa; color:#a78bfa; }
+  #journal-btn.open  { background:#a78bfa; border-color:#a78bfa; color:#fff; }
+  #journal-badge {
+    position:absolute; top:-5px; right:-5px;
+    background:#a78bfa; color:#fff; border-radius:10px;
+    font-size:5px; padding:2px 4px; letter-spacing:.5px;
+    display:none; line-height:1.2; pointer-events:none;
+    font-family:'Press Start 2P',monospace;
+  }
+  #journal-badge.visible { display:block; }
+
+  /* ── Journal panel ── */
+  #journal-panel {
+    display:none;
+    position:fixed; bottom:56px; left:14px;
+    width:min(380px, calc(100vw - 28px));
+    background:#0e0e1e; border:1px solid #252545; border-radius:10px;
+    padding:14px; z-index:99;
+    box-shadow: 0 8px 32px #00000088;
+    max-height: calc(100dvh - 100px);
+    flex-direction: column;
+  }
+  #journal-panel.open { display:flex; animation: fadeSlide .25s ease; }
+  #journal-panel-header {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:10px; flex-shrink:0; gap:8px;
+  }
+  #journal-panel-header h3 { font-size:8px; color:#a78bfa; letter-spacing:1px; }
+  #journal-summary {
+    font-size:6px; color:#8888aa; letter-spacing:.5px; flex-shrink:0;
+    text-align:right; line-height:2;
+  }
+
+  #journal-entries {
+    overflow-y:auto; flex:1;
+    scrollbar-width:thin; scrollbar-color:#252545 transparent;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  #journal-entries::-webkit-scrollbar { width:4px; }
+  #journal-entries::-webkit-scrollbar-thumb { background:#252545; border-radius:2px; }
+
+  /* ── Journal entry card ── */
+  .jentry {
+    border-radius:8px; border:1px solid #1e1e38;
+    background:#0a0a18; padding:10px 11px;
+    transition:background .3s, border-color .3s;
+    position:relative;
+  }
+  .jentry.outcome-fire   { background:#050e06; border-color:#22c55e44; }
+  .jentry.outcome-skull  { background:#0e0505; border-color:#ef444444; }
+  .jentry.outcome-spark  { background:#080810; border-color:#eab30844; }
+
+  .jentry-top {
+    display:flex; align-items:center; gap:6px; margin-bottom:8px;
+  }
+  .jentry-outcome-btn {
+    background:#12122a; border:1px solid #2a2a4a; border-radius:6px;
+    cursor:pointer; font-size:12px; padding:3px 6px 1px; line-height:1.3;
+    -webkit-tap-highlight-color:transparent; flex-shrink:0;
+    transition:border-color .2s, background .2s;
+    display:flex; flex-direction:column; align-items:center; gap:1px;
+  }
+  .jentry-outcome-btn::after {
+    content:'TAP'; font-family:'Press Start 2P',monospace; font-size:4px;
+    color:#333355; letter-spacing:.5px; line-height:1;
+  }
+  .jentry-outcome-btn:not([data-active])::after,
+  .jentry-outcome-btn[data-active=""]::after { content:'TAP'; }
+  .jentry-outcome-btn:hover { border-color:#a78bfa; background:#1a1a34; }
+  .jentry-outcome-btn:hover::after { color:#a78bfa; }
+
+  .jentry-teamname {
+    flex:1; background:none; border:none; border-bottom:1px solid transparent;
+    color:#a78bfa; font-family:'Press Start 2P',monospace; font-size:6px;
+    outline:none; padding:2px 0; letter-spacing:.5px;
+    transition:border-color .2s, color .2s;
+    user-select:text; -webkit-user-select:text;
+  }
+  .jentry-teamname::placeholder { color:#252545; }
+  .jentry-teamname:focus { border-bottom-color:#a78bfa55; }
+  .jentry-teamname.has-name { color:#e0e0e0; font-size:7px; }
+
+  .jentry-meta {
+    font-size:5px; color:#8888aa; letter-spacing:.5px; flex-shrink:0;
+    text-align:right; line-height:2;
+  }
+  .jentry-del {
+    background:none; border:none; color:#252545; cursor:pointer;
+    font-size:12px; padding:2px 4px; line-height:1; flex-shrink:0;
+    font-family:sans-serif; transition:color .15s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .jentry-del:hover { color:#ef4444; }
+
+  /* Slot chips row */
+  .jentry-slots {
+    display:flex; gap:4px; margin-bottom:8px; flex-wrap:wrap;
+  }
+  .jentry-chip {
+    border-radius:5px; border:1px solid #1e1e38;
+    background:#12122a; cursor:pointer; position:relative;
+    min-width:32px; height:30px; display:flex; align-items:center; justify-content:center;
+    -webkit-tap-highlight-color:transparent; flex-shrink:0;
+    transition:border-color .15s;
+  }
+  .jentry-chip:hover { border-color:#a78bfa55; }
+  .jentry-chip.shiny-chip { border-color:#fbbf2466; background:#110e02; }
+  .jentry-chip-num {
+    font-size:7px; font-family:'Press Start 2P',monospace;
+    line-height:1; pointer-events:none;
+  }
+  .jentry-chip.shiny-chip .jentry-chip-num { color:#fbbf24 !important; text-shadow:0 0 8px #fbbf24aa; }
+  .jentry-chip-name {
+    font-size:6px; color:#e0e0e0; font-family:'Press Start 2P',monospace;
+    line-height:1; padding:0 3px; text-align:center; max-width:60px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    pointer-events:none;
+  }
+  .jentry-chip.shiny-chip .jentry-chip-name { color:#fbbf24; text-shadow:0 0 8px #fbbf24aa; }
+  .jentry-chip-input {
+    position:absolute; inset:0; width:100%; border:none; border-radius:5px;
+    background:#1a1a34; color:#e0e0e0; font-family:'Press Start 2P',monospace;
+    font-size:6px; text-align:center; outline:none; padding:2px 3px;
+    display:none; z-index:2;
+    user-select:text; -webkit-user-select:text;
+  }
+  .jentry-chip.editing .jentry-chip-input { display:block; }
+  .jentry-chip.editing .jentry-chip-num,
+  .jentry-chip.editing .jentry-chip-name { display:none; }
+  .jentry-chip.shiny-chip .jentry-chip-input { background:#1a1400; color:#fbbf24; }
+
+  /* Rule section */
+  .jentry-rule {
+    font-size:6px; line-height:1.9; padding:6px 8px; border-radius:5px;
+    border:1px solid #1a1a34; margin-bottom:7px;
+    background:#08081a;
+  }
+  .jentry-rule-label {
+    font-size:5px; letter-spacing:1px; margin-bottom:4px; opacity:.7;
+  }
+  .jentry-rule-text { color:#555577; }
+  .jentry-rule-text.has-rule { color:#e0e0e0; }
+  .jentry-rule-text.no-rule  { color:#252540; font-style:italic; }
+
+  /* Notes */
+  .jentry-notes {
+    width:100%; background:#0a0a18; border:1px solid #1a1a34; border-radius:5px;
+    color:#666688; font-family:'Press Start 2P',monospace; font-size:5px;
+    padding:6px 8px; outline:none; resize:none; line-height:2;
+    overflow:hidden; transition:border-color .2s, color .2s;
+    user-select:text; -webkit-user-select:text; min-height:24px;
+  }
+  .jentry-notes::placeholder { color:#1e1e38; }
+  .jentry-notes:focus { border-color:#a78bfa44; color:#aaaacc; }
+
+  /* Empty state */
+  #journal-empty {
+    text-align:center; color:#252545; font-size:6px; letter-spacing:1px;
+    padding:30px 0; line-height:2.5;
+  }
+
   /* ── Rules panel ── */
   #rules-panel {
     display:none;
@@ -591,6 +762,23 @@
 
 <!-- Screen overlay for mythical effects -->
 <div id="screen-overlay"></div>
+
+<!-- Journal button -->
+<button id="journal-btn" title="Run journal">
+  📖
+  <span id="journal-badge"></span>
+</button>
+
+<!-- Journal panel -->
+<div id="journal-panel">
+  <div id="journal-panel-header">
+    <h3>RUN JOURNAL</h3>
+    <div id="journal-summary"></div>
+  </div>
+  <div id="journal-entries">
+    <div id="journal-empty">NO ENTRIES YET.<br>ROLL A TEAM TO BEGIN.</div>
+  </div>
+</div>
 
 <!-- Cog -->
 <button id="cog-btn" title="Edit rules">⚙</button>
@@ -1086,7 +1274,14 @@ function roll() {
       document.getElementById('pb-right').classList.remove('spinning');
 
       revealSlots(team, () => {
-        setTimeout(() => showRuleBox(rollRule()), 250);
+        const _snapshotTeam   = team.slice();
+        const _snapshotShinys = shinySlots.slice();
+        const _snapshotTeamN  = teamCount;
+        setTimeout(() => {
+          const ruleResult = rollRule();
+          showRuleBox(ruleResult);
+          addJournalEntry(_snapshotTeam, _snapshotShinys, ruleResult, _snapshotTeamN);
+        }, 250);
         setTimeout(revealShinySlots, 700);
       });
     }
@@ -1563,6 +1758,324 @@ document.getElementById('pool-input').addEventListener('blur', function() {
   const v = parseInt(this.value, 10);
   this.value = isNaN(v) ? 30 : Math.max(6, Math.min(300, v));
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Journal
+// ─────────────────────────────────────────────────────────────────────────────
+const OUTCOME_CYCLE = ['', '🔥', '💀', '⚡'];
+
+let journalEntries = [];
+
+function loadJournal() {
+  const d = loadData('soullink_journal');
+  if (!Array.isArray(d)) return [];
+  return d;
+}
+
+function saveJournal() {
+  saveData('soullink_journal', journalEntries);
+}
+
+function addJournalEntry(slots, shinys, ruleResult, teamNum) {
+  const entry = {
+    id: Date.now(),
+    teamNum,
+    slots: slots.slice(),           // numbers 1–6
+    shinys: shinys.slice(),         // booleans
+    names: new Array(6).fill(''),   // user-typed names
+    rule: ruleResult ? {
+      text: ruleResult.text,
+      pct:  ruleResult.pct,
+      type: ruleResult.type,
+      tier: getRuleTierFixed(ruleResult.pct),
+    } : null,
+    outcome: '',    // '' | '🔥' | '💀' | '⚡'
+    teamName: '',
+    notes: '',
+    ts: new Date().toLocaleString(undefined, { weekday:'short', month:'short', day:'numeric', hour:'numeric', hour12:true }),
+  };
+  journalEntries.unshift(entry);
+  saveJournal();
+  updateJournalBadge();
+  if (journalOpen) renderJournalEntries();
+}
+
+function updateJournalBadge() {
+  const badge = document.getElementById('journal-badge');
+  if (journalEntries.length > 0) {
+    badge.textContent = journalEntries.length;
+    badge.classList.add('visible');
+  } else {
+    badge.classList.remove('visible');
+  }
+}
+
+function journalSummaryText() {
+  let curses = 0, buffs = 0, norule = 0;
+  for (const e of journalEntries) {
+    if (!e.rule) norule++;
+    else if (e.rule.type === 'curse') curses++;
+    else buffs++;
+  }
+  const total = journalEntries.length;
+  if (!total) return '';
+  return `${total} team${total!==1?'s':''} · ${curses} curse${curses!==1?'s':''} · ${buffs} buff${buffs!==1?'s':''} · ${norule} no rule`;
+}
+
+// ── Tier→color mapping for journal entry rule display ──
+const TIER_RULE_COLORS = {
+  'mythical-curse':   { bg:'#08000a', border:'#7f000088', label:'#dc2626', text:'#fca5a5' },
+  'mythical-buff':    { bg:'#00080f', border:'#67e8f988', label:'#67e8f9', text:'#cffafe' },
+  'legendary-curse':  { bg:'#0d0500', border:'#f9731655', label:'#f97316', text:'#fed7aa' },
+  'legendary-buff':   { bg:'#001209', border:'#34d39955', label:'#34d399', text:'#d1fae5' },
+  'ultra-curse':      { bg:'#0a0514', border:'#7c3aed44', label:'#a78bfa', text:'#ede9fe' },
+  'ultra-buff':       { bg:'#00080f', border:'#0891b244', label:'#22d3ee', text:'#cffafe' },
+  'rare-curse':       { bg:'#0f0606', border:'#ef444433', label:'#f87171', text:'#fecaca' },
+  'rare-buff':        { bg:'#020f05', border:'#16a34a33', label:'#4ade80', text:'#dcfce7' },
+  'uncommon-curse':   { bg:'#0c0808', border:'#dc262622', label:'#f87171', text:'#fecaca' },
+  'uncommon-buff':    { bg:'#020c08', border:'#0d948022', label:'#2dd4bf', text:'#ccfbf1' },
+  'common-curse':     { bg:'#0c0808', border:'#dc262618', label:'#f87171', text:'#fca5a5' },
+  'common-buff':      { bg:'#020c05', border:'#16a34a18', label:'#4ade80', text:'#bbf7d0' },
+  'frequent-curse':   { bg:'#0a0a0a', border:'#dc262614', label:'#ef4444', text:'#fca5a5' },
+  'frequent-buff':    { bg:'#0a0a0a', border:'#16a34a14', label:'#22c55e', text:'#bbf7d0' },
+  'guaranteed-curse': { bg:'#0a0a0a', border:'#52181812', label:'#b45454', text:'#e8e8e8' },
+  'guaranteed-buff':  { bg:'#0a0a0a', border:'#18522212', label:'#4a9e6a', text:'#e8e8e8' },
+};
+
+function makeChip(entry, slotIdx) {
+  const chip = document.createElement('div');
+  chip.className = 'jentry-chip' + (entry.shinys[slotIdx] ? ' shiny-chip' : '');
+
+  const slotColor = COLORS[slotIdx] || '#e0e0e0';
+
+  const numEl = document.createElement('span');
+  numEl.className = 'jentry-chip-num';
+  if (!entry.shinys[slotIdx]) numEl.style.color = slotColor;
+
+  const nameEl = document.createElement('span');
+  nameEl.className = 'jentry-chip-name';
+  if (!entry.shinys[slotIdx]) nameEl.style.color = slotColor;
+
+  const inp = document.createElement('input');
+  inp.className = 'jentry-chip-input';
+  inp.type = 'text';
+  inp.maxLength = 18;
+  inp.placeholder = String(entry.slots[slotIdx]);
+  inp.spellcheck = false;
+
+  function refresh() {
+    const n = entry.names[slotIdx];
+    if (n) {
+      numEl.style.display = 'none';
+      nameEl.style.display = '';
+      nameEl.textContent = n;
+    } else {
+      numEl.style.display = '';
+      nameEl.style.display = 'none';
+      numEl.textContent = String(entry.slots[slotIdx]);
+    }
+  }
+  refresh();
+
+  chip.appendChild(numEl);
+  chip.appendChild(nameEl);
+  chip.appendChild(inp);
+
+  chip.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    chip.classList.add('editing');
+    inp.value = entry.names[slotIdx] || '';
+    requestAnimationFrame(() => { inp.focus(); inp.select(); });
+  });
+
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === 'Escape') { inp.blur(); }
+  });
+
+  inp.addEventListener('blur', () => {
+    entry.names[slotIdx] = inp.value.trim();
+    chip.classList.remove('editing');
+    refresh();
+    saveJournal();
+  });
+
+  return chip;
+}
+
+function renderJournalEntry(entry) {
+  const el = document.createElement('div');
+  el.className = 'jentry' + (entry.outcome === '🔥' ? ' outcome-fire' : entry.outcome === '💀' ? ' outcome-skull' : entry.outcome === '⚡' ? ' outcome-spark' : '');
+  el.dataset.id = entry.id;
+
+  // Top row: outcome button, team name, meta
+  const top = document.createElement('div');
+  top.className = 'jentry-top';
+
+  const outcomeBtn = document.createElement('button');
+  outcomeBtn.className = 'jentry-outcome-btn';
+  outcomeBtn.textContent = entry.outcome || '·';
+  outcomeBtn.title = 'Tap to cycle outcome';
+  outcomeBtn.addEventListener('pointerdown', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    const idx = OUTCOME_CYCLE.indexOf(entry.outcome);
+    entry.outcome = OUTCOME_CYCLE[(idx + 1) % OUTCOME_CYCLE.length];
+    outcomeBtn.textContent = entry.outcome || '·';
+    el.className = 'jentry' + (entry.outcome === '🔥' ? ' outcome-fire' : entry.outcome === '💀' ? ' outcome-skull' : entry.outcome === '⚡' ? ' outcome-spark' : '');
+    saveJournal();
+  });
+
+  const teamName = document.createElement('input');
+  teamName.className = 'jentry-teamname' + (entry.teamName ? ' has-name' : '');
+  teamName.type = 'text';
+  teamName.placeholder = `Team #${entry.teamNum}...`;
+  teamName.value = entry.teamName || '';
+  teamName.maxLength = 30;
+  teamName.spellcheck = false;
+  teamName.addEventListener('pointerdown', e => e.stopPropagation());
+  teamName.addEventListener('input', () => {
+    entry.teamName = teamName.value.trim();
+    teamName.className = 'jentry-teamname' + (entry.teamName ? ' has-name' : '');
+    saveJournal();
+  });
+
+  const meta = document.createElement('div');
+  meta.className = 'jentry-meta';
+  meta.textContent = `#${entry.teamNum}\n${entry.ts}`;
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'jentry-del';
+  delBtn.textContent = '✕';
+  delBtn.title = 'Remove entry';
+  delBtn.addEventListener('pointerdown', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    journalEntries = journalEntries.filter(en => en.id !== entry.id);
+    saveJournal();
+    updateJournalBadge();
+    renderJournalEntries();
+  });
+
+  top.appendChild(outcomeBtn);
+  top.appendChild(teamName);
+  top.appendChild(meta);
+  top.appendChild(delBtn);
+  el.appendChild(top);
+
+  // Slot chips
+  const slotsRow = document.createElement('div');
+  slotsRow.className = 'jentry-slots';
+  for (let i = 0; i < 6; i++) {
+    slotsRow.appendChild(makeChip(entry, i));
+  }
+  el.appendChild(slotsRow);
+
+  // Rule box
+  const ruleBox = document.createElement('div');
+  ruleBox.className = 'jentry-rule';
+
+  if (entry.rule) {
+    const key = `${entry.rule.tier}-${entry.rule.type}`;
+    const c = TIER_RULE_COLORS[key] || {};
+    if (c.bg)     { ruleBox.style.background   = c.bg; }
+    if (c.border) { ruleBox.style.borderColor  = c.border; }
+
+    const ruleLabel = document.createElement('div');
+    ruleLabel.className = 'jentry-rule-label';
+    ruleLabel.style.color = c.label || '#a78bfa';
+    ruleLabel.textContent = getTierLabel(entry.rule.tier, entry.rule.type);
+
+    const ruleText = document.createElement('div');
+    ruleText.className = 'jentry-rule-text has-rule';
+    ruleText.style.color = c.text || '#e0e0e0';
+    ruleText.textContent = entry.rule.text;
+
+    ruleBox.appendChild(ruleLabel);
+    ruleBox.appendChild(ruleText);
+  } else {
+    const ruleText = document.createElement('div');
+    ruleText.className = 'jentry-rule-text no-rule';
+    ruleText.textContent = '— no rule —';
+    ruleBox.appendChild(ruleText);
+  }
+  el.appendChild(ruleBox);
+
+  // Notes
+  const notes = document.createElement('textarea');
+  notes.className = 'jentry-notes';
+  notes.placeholder = 'what happened this gym...';
+  notes.value = entry.notes || '';
+  notes.rows = 1;
+  notes.spellcheck = false;
+  notes.addEventListener('pointerdown', e => e.stopPropagation());
+  notes.addEventListener('input', () => {
+    notes.style.height = 'auto';
+    notes.style.height = notes.scrollHeight + 'px';
+    entry.notes = notes.value;
+    saveJournal();
+  });
+  requestAnimationFrame(() => {
+    notes.style.height = 'auto';
+    notes.style.height = notes.scrollHeight + 'px';
+  });
+  el.appendChild(notes);
+
+  return el;
+}
+
+function renderJournalEntries() {
+  const container = document.getElementById('journal-entries');
+  const empty     = document.getElementById('journal-empty');
+  container.innerHTML = '';
+  container.appendChild(empty);
+
+  if (!journalEntries.length) {
+    empty.style.display = '';
+    document.getElementById('journal-summary').textContent = '';
+    return;
+  }
+  empty.style.display = 'none';
+  document.getElementById('journal-summary').textContent = journalSummaryText();
+
+  for (const entry of journalEntries) {
+    container.appendChild(renderJournalEntry(entry));
+  }
+}
+
+// ── Journal panel open/close ──
+const journalBtn   = document.getElementById('journal-btn');
+const journalPanel = document.getElementById('journal-panel');
+let journalOpen = false;
+
+journalPanel.addEventListener('pointerdown', e => e.stopPropagation());
+
+journalBtn.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  journalOpen = !journalOpen;
+  journalBtn.classList.toggle('open', journalOpen);
+  if (journalOpen) {
+    // close rules panel if open
+    if (panelOpen) {
+      panelOpen = false;
+      cogBtn.classList.remove('open');
+      rulesPanel.classList.remove('open');
+    }
+    journalPanel.classList.add('open');
+    renderJournalEntries();
+  } else {
+    journalPanel.classList.remove('open');
+  }
+});
+
+document.addEventListener('pointerdown', () => {
+  if (!journalOpen) return;
+  journalOpen = false;
+  journalBtn.classList.remove('open');
+  journalPanel.classList.remove('open');
+});
+
+// ── Init journal ──
+journalEntries = loadJournal();
+updateJournalBadge();
 </script>
 </body>
 </html>
