@@ -82,11 +82,11 @@
   /* ── Team counter (lives in pool row) ── */
   #team-counter {
     display: inline-flex; align-items: center; gap: 5px;
-    font-size: 9px; color: #444466; letter-spacing: 1px;
+    font-size: 9px; color: #8888aa; letter-spacing: 1px;
   }
   #team-count-input {
     background: none; border: none; border-bottom: 1px solid transparent;
-    color: #444466; font-family: 'Press Start 2P', monospace; font-size: 9px;
+    color: #8888aa; font-family: 'Press Start 2P', monospace; font-size: 9px;
     width: 32px; text-align: center; outline: none; padding: 0 2px;
     -moz-appearance: textfield; transition: color .2s, border-color .2s;
     user-select: none; -webkit-user-select: none; cursor: default;
@@ -97,7 +97,7 @@
   }
 
   /* divider pip between counter and pool */
-  .pool-sep { color: #252545; font-size: 9px; }
+  .pool-sep { color: #444466; font-size: 9px; }
 
   @keyframes counterBump {
     0%   { transform: scale(1);    color: #444466; }
@@ -110,7 +110,7 @@
 
   /* ── Pool row ── */
   #pool-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; justify-content:center; }
-  #pool-row label { color:#444466; font-size:9px; letter-spacing:1px; }
+  #pool-row label { color:#8888aa; font-size:9px; letter-spacing:1px; }
   #pool-input {
     background:#12122a; border:1px solid #252545; border-radius:4px;
     color:#e0e0e0; font-family:'Press Start 2P',monospace; font-size:12px;
@@ -420,7 +420,7 @@
   /* ── Buff/Curse pill toggle ── */
   .rule-type-pill {
     border: none; border-radius: 20px; cursor: pointer;
-    font-family: 'Press Start 2P', monospace; font-size: 5px;
+    font-family: 'Press Start 2P', monospace; font-size: 6px;
     padding: 4px 8px; letter-spacing: 1px; flex-shrink: 0;
     transition: background .2s, color .2s, box-shadow .2s;
     -webkit-tap-highlight-color: transparent;
@@ -474,7 +474,7 @@
   #journal-panel {
     display:none;
     position:fixed; bottom:56px; left:14px;
-    width:min(380px, calc(100vw - 28px));
+    width:min(456px, calc(100vw - 28px));
     background:#0e0e1e; border:1px solid #252545; border-radius:10px;
     padding:14px; z-index:99;
     box-shadow: 0 8px 32px #00000088;
@@ -488,7 +488,7 @@
   }
   #journal-panel-header h3 { font-size:8px; color:#a78bfa; letter-spacing:1px; }
   #journal-summary {
-    font-size:6px; color:#8888aa; letter-spacing:.5px; flex-shrink:0;
+    font-size:7px; color:#8888aa; letter-spacing:.5px; flex-shrink:0;
     text-align:right; line-height:2;
   }
 
@@ -536,9 +536,26 @@
   .jentry-teamname.has-name { color:#e0e0e0; font-size:7px; }
 
   .jentry-meta {
-    font-size:5px; color:#8888aa; letter-spacing:.5px; flex-shrink:0;
+    font-size:6px; color:#8888aa; letter-spacing:.5px; flex-shrink:0;
     text-align:right; line-height:2;
   }
+  .jentry-battle-pill {
+    display:inline-flex; align-items:center; gap:5px;
+    border-radius:20px; border:1px solid #2a2a4a;
+    background:#12122a; cursor:pointer;
+    font-family:'Press Start 2P',monospace; font-size:8px;
+    padding:4px 9px; letter-spacing:.5px;
+    color:#444466; transition:all .2s;
+    -webkit-tap-highlight-color:transparent; flex-shrink:0;
+    margin-bottom:8px;
+  }
+  .jentry-battle-pill .pill-icon {
+    font-family:sans-serif; font-size:12px; line-height:1; letter-spacing:0;
+  }
+  .jentry-battle-pill:hover { border-color:#a78bfa55; color:#6666aa; }
+  .jentry-battle-pill.won-p1 { background:#0a0d1a; border-color:#a78bfa88; color:#a78bfa; }
+  .jentry-battle-pill.won-p2 { background:#0d0a1a; border-color:#ec489988; color:#ec4899; }
+
   .jentry-del {
     background:none; border:none; color:#252545; cursor:pointer;
     font-size:12px; padding:2px 4px; line-height:1; flex-shrink:0;
@@ -561,12 +578,12 @@
   .jentry-chip:hover { border-color:#a78bfa55; }
   .jentry-chip.shiny-chip { border-color:#fbbf2466; background:#110e02; }
   .jentry-chip-num {
-    font-size:7px; font-family:'Press Start 2P',monospace;
+    font-size:8px; font-family:'Press Start 2P',monospace;
     line-height:1; pointer-events:none;
   }
   .jentry-chip.shiny-chip .jentry-chip-num { color:#fbbf24 !important; text-shadow:0 0 8px #fbbf24aa; }
   .jentry-chip-name {
-    font-size:6px; color:#e0e0e0; font-family:'Press Start 2P',monospace;
+    font-size:7px; color:#e0e0e0; font-family:'Press Start 2P',monospace;
     line-height:1; padding:0 3px; text-align:center; max-width:60px;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
     pointer-events:none;
@@ -575,7 +592,7 @@
   .jentry-chip-input {
     position:absolute; inset:0; width:100%; border:none; border-radius:5px;
     background:#1a1a34; color:#e0e0e0; font-family:'Press Start 2P',monospace;
-    font-size:6px; text-align:center; outline:none; padding:2px 3px;
+    font-size:7px; text-align:center; outline:none; padding:2px 3px;
     display:none; z-index:2;
     user-select:text; -webkit-user-select:text;
   }
@@ -586,12 +603,12 @@
 
   /* Rule section */
   .jentry-rule {
-    font-size:6px; line-height:1.9; padding:6px 8px; border-radius:5px;
+    font-size:7px; line-height:1.9; padding:6px 8px; border-radius:5px;
     border:1px solid #1a1a34; margin-bottom:7px;
     background:#08081a;
   }
   .jentry-rule-label {
-    font-size:5px; letter-spacing:1px; margin-bottom:4px; opacity:.7;
+    font-size:6px; letter-spacing:1px; margin-bottom:4px; opacity:.7;
   }
   .jentry-rule-text { color:#555577; }
   .jentry-rule-text.has-rule { color:#e0e0e0; }
@@ -600,7 +617,7 @@
   /* Notes */
   .jentry-notes {
     width:100%; background:#0a0a18; border:1px solid #1a1a34; border-radius:5px;
-    color:#666688; font-family:'Press Start 2P',monospace; font-size:5px;
+    color:#666688; font-family:'Press Start 2P',monospace; font-size:7px;
     padding:6px 8px; outline:none; resize:none; line-height:2;
     overflow:hidden; transition:border-color .2s, color .2s;
     user-select:text; -webkit-user-select:text; min-height:24px;
@@ -652,7 +669,7 @@
   .rule-text-input {
     width: 100%;
     background:#12122a; border:1px solid #1e1e38; border-radius:4px;
-    color:#e0e0e0; font-family:'Press Start 2P',monospace; font-size:6px;
+    color:#e0e0e0; font-family:'Press Start 2P',monospace; font-size:7px;
     padding:6px 7px; outline:none; transition:border-color .2s;
     user-select:text; -webkit-user-select:text;
     resize: none;
@@ -669,8 +686,8 @@
   }
   .rule-move {
     background: none; border: 1px solid #1e1e38; border-radius: 3px;
-    color: #333355; cursor: pointer;
-    font-size: 9px; padding: 3px 5px; line-height: 1;
+    color: #555577; cursor: pointer;
+    font-size: 10px; padding: 3px 5px; line-height: 1;
     font-family: sans-serif; transition: all .15s; flex-shrink: 0;
   }
   .rule-move:hover:not(:disabled) { border-color:#a78bfa; color:#a78bfa; }
@@ -678,7 +695,7 @@
 
   .rule-pct-input {
     width:46px; background:#12122a; border:1px solid #1e1e38; border-radius:4px;
-    color:#a78bfa; font-family:'Press Start 2P',monospace; font-size:6px;
+    color:#a78bfa; font-family:'Press Start 2P',monospace; font-size:7px;
     padding:5px 4px; text-align:center; outline:none;
     transition:border-color .2s; -moz-appearance:textfield;
     user-select:text; -webkit-user-select:text;
@@ -686,7 +703,7 @@
   .rule-pct-input:focus { border-color:#a78bfa; }
   input[type=number]::-webkit-inner-spin-button,
   input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
-  .pct-label { font-size:6px; color:#333355; flex-shrink:0; }
+  .pct-label { font-size:7px; color:#555577; flex-shrink:0; }
   .rule-del {
     background:none; border:none; color:#2a2a44; cursor:pointer;
     font-size:12px; padding:2px 4px; line-height:1;
@@ -696,7 +713,7 @@
 
   #add-rule-btn {
     width:100%; background:#12122a; border:1px solid #252545; border-radius:4px;
-    color:#444466; font-family:'Press Start 2P',monospace; font-size:6px;
+    color:#8888aa; font-family:'Press Start 2P',monospace; font-size:7px;
     padding:6px; cursor:pointer; letter-spacing:1px;
     transition:all .2s; margin-bottom:8px; flex-shrink:0;
   }
@@ -708,7 +725,7 @@
   }
   .toolbar-btn {
     background: #12122a; border: 1px solid #1e1e38; border-radius: 4px;
-    color: #444466; font-family: 'Press Start 2P', monospace; font-size: 5px;
+    color: #8888aa; font-family: 'Press Start 2P', monospace; font-size: 6px;
     padding: 5px 7px; cursor: pointer; letter-spacing: 1px;
     transition: all .15s; flex-shrink: 0;
     -webkit-tap-highlight-color: transparent;
@@ -719,7 +736,7 @@
   #import-file { display: none; }
 
   #rules-total {
-    font-size:6px; color:#333355; text-align:right; letter-spacing:1px; flex-shrink:0;
+    font-size:7px; color:#8888aa; text-align:right; letter-spacing:1px; flex-shrink:0;
   }
   #rules-total span { color:#a78bfa; }
 </style>
@@ -798,6 +815,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 const COLORS       = ["#ef4444","#f97316","#eab308","#22c55e","#a78bfa","#ec4899"];
 const SHINY_CHANCE = 1 / 512;
+
+// ── Battle players — edit these names ──
+const BATTLE_PLAYER_1 = 'Matin';  // ← your name
+const BATTLE_PLAYER_2 = 'Lunal';  // ← friend's name
 
 let team       = new Array(6).fill(null);
 let rolling    = false;
@@ -1791,7 +1812,8 @@ function addJournalEntry(slots, shinys, ruleResult, teamNum) {
       type: ruleResult.type,
       tier: getRuleTierFixed(ruleResult.pct),
     } : null,
-    outcome: '',    // '' | '🔥' | '💀' | '⚡'
+    outcome: '',      // '' | '🔥' | '💀' | '⚡'
+    battleWinner: '', // '' | 'p1' | 'p2'
     teamName: '',
     notes: '',
     ts: new Date().toLocaleString(undefined, { weekday:'short', month:'short', day:'numeric', hour:'numeric', hour12:true }),
@@ -1980,6 +2002,30 @@ function renderJournalEntry(entry) {
     slotsRow.appendChild(makeChip(entry, i));
   }
   el.appendChild(slotsRow);
+
+  // Battle pill
+  const battlePill = document.createElement('button');
+  battlePill.className = 'jentry-battle-pill' + (entry.battleWinner === 'p1' ? ' won-p1' : entry.battleWinner === 'p2' ? ' won-p2' : '');
+
+  function refreshBattlePill() {
+    let label;
+    if (entry.battleWinner === 'p1')      label = BATTLE_PLAYER_1 + ' won';
+    else if (entry.battleWinner === 'p2') label = BATTLE_PLAYER_2 + ' won';
+    else                                  label = 'battle?';
+    battlePill.innerHTML = `<span class="pill-icon">⚔️</span>${label}`;
+  }
+  refreshBattlePill();
+
+  battlePill.addEventListener('pointerdown', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    if      (!entry.battleWinner)          entry.battleWinner = 'p1';
+    else if (entry.battleWinner === 'p1')  entry.battleWinner = 'p2';
+    else                                   entry.battleWinner = '';
+    battlePill.className = 'jentry-battle-pill' + (entry.battleWinner === 'p1' ? ' won-p1' : entry.battleWinner === 'p2' ? ' won-p2' : '');
+    refreshBattlePill();
+    saveJournal();
+  });
+  el.appendChild(battlePill);
 
   // Rule box
   const ruleBox = document.createElement('div');
