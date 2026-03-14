@@ -18,7 +18,7 @@
     align-items: center;
     justify-content: flex-start;
     font-family: 'Press Start 2P', monospace;
-    padding: clamp(12px, 3vh, 28px) 14px 80px;
+    padding: clamp(8px, 2vh, 18px) 14px 58px;
     user-select: none;
     -webkit-user-select: none;
     overflow-x: hidden;
@@ -74,16 +74,42 @@
   }
 
   /* ── Header ── */
-  #header { text-align: center; margin-bottom: 16px; }
-  .soul-link-row { display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:8px; }
+  #header { text-align: center; margin-bottom: 10px; }
+  .soul-link-row { display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:5px; }
   .soul-link-label { color:#ef4444; font-size:13px; letter-spacing:3px; }
-  .title-main { color:#f0f0f0; font-size:16px; letter-spacing:3px; margin-bottom:6px; }
-  .title-sub  { color:#333355; font-size:7px; letter-spacing:1px; }
+  .title-main { color:#f0f0f0; font-size:16px; letter-spacing:3px; margin-bottom:5px; }
+
+  /* ── Team counter (lives in pool row) ── */
+  #team-counter {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 9px; color: #444466; letter-spacing: 1px;
+  }
+  #team-count-input {
+    background: none; border: none; border-bottom: 1px solid transparent;
+    color: #444466; font-family: 'Press Start 2P', monospace; font-size: 9px;
+    width: 32px; text-align: center; outline: none; padding: 0 2px;
+    -moz-appearance: textfield; transition: color .2s, border-color .2s;
+    user-select: none; -webkit-user-select: none; cursor: default;
+  }
+  #team-count-input:focus {
+    color: #e0e0e0; border-bottom-color: #ef4444;
+    user-select: text; -webkit-user-select: text; cursor: text;
+  }
+
+  /* divider pip between counter and pool */
+  .pool-sep { color: #252545; font-size: 9px; }
+
+  @keyframes counterBump {
+    0%   { transform: scale(1);    color: #444466; }
+    30%  { transform: scale(1.45); color: #ef4444; }
+    100% { transform: scale(1);    color: #444466; }
+  }
+  #team-count-input.bumped { animation: counterBump .4s ease both; }
   .pokeball { display:block; }
   .pokeball.spinning { animation: spin .35s linear infinite; }
 
   /* ── Pool row ── */
-  #pool-row { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+  #pool-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; justify-content:center; }
   #pool-row label { color:#444466; font-size:9px; letter-spacing:1px; }
   #pool-input {
     background:#12122a; border:1px solid #252545; border-radius:4px;
@@ -98,14 +124,14 @@
   /* ── Roll button wrapper ── */
   #roll-wrap {
     width: 100%; max-width: min(calc(100vw - 28px), 440px);
-    margin-bottom: 18px; display: flex; flex-direction: column; gap: 0;
+    margin-bottom: 12px; display: flex; flex-direction: column; gap: 0;
   }
 
   /* ── Roll button ── */
   #roll-btn {
     background: linear-gradient(135deg,#ef4444,#b91c1c);
     color:#fff; font-family:'Press Start 2P',monospace; font-size:11px;
-    padding:14px 36px; border-radius:6px 6px 0 0; border:none; cursor:pointer;
+    padding:11px 36px; border-radius:6px 6px 0 0; border:none; cursor:pointer;
     letter-spacing:2px;
     box-shadow: 0 0 28px rgba(239,68,68,.4);
     transition:transform .1s, background .2s, box-shadow .2s;
@@ -141,7 +167,7 @@
   /* ── Number grid ── */
   #num-grid {
     display:grid; grid-template-columns:repeat(3,1fr);
-    gap:10px; width:100%; max-width:min(calc(100vw - 28px), 440px); margin-bottom:16px;
+    gap:8px; width:100%; max-width:min(calc(100vw - 28px), 440px); margin-bottom:10px;
   }
   .num-card {
     background:#10101e; border:2px solid #1e1e38; border-radius:10px;
@@ -168,13 +194,13 @@
   #rule-box {
     width:100%; max-width:min(calc(100vw - 28px), 440px);
     border-radius:10px; border:1px solid #1a1a34;
-    padding:14px 16px; margin-bottom:10px;
+    padding:10px 14px; margin-bottom:8px;
     background:#0c0c1c;
     transition: border-color .3s, opacity .4s, transform .4s;
     opacity: 0;
     transform: translateY(8px);
     pointer-events: none;
-    min-height: 70px;
+    min-height: 58px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -542,7 +568,7 @@
     <svg class="pokeball" id="pb-right" width="26" height="26" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1a1a2e" stroke="#3a3a5a" stroke-width="1"/><path d="M1 12 Q1 2 12 2 Q23 2 23 12Z" fill="#ef4444" opacity="0.85"/><line x1="1" y1="12" x2="23" y2="12" stroke="#3a3a5a" stroke-width="1.5"/><circle cx="12" cy="12" r="3.5" fill="#1a1a2e" stroke="#3a3a5a" stroke-width="1.5"/><circle cx="12" cy="12" r="1.5" fill="#e5e5e5"/></svg>
   </div>
   <div class="title-main">TEAM ROLLER</div>
-  <div class="title-sub">INFINITE FUSION · NUZLOCKE · HARD MODE</div>
+  <div id="team-counter"><span>TEAM #</span><input id="team-count-input" type="number" min="0" value="0"/></div>
 </div>
 
 <div id="pool-row">
@@ -1031,6 +1057,7 @@ function roll() {
   cb.style.transition = 'none'; cb.style.width = '0%'; cb.classList.remove('full');
 
   rollShinySlots();
+  incrementTeamCount();
 
   const btn = document.getElementById('roll-btn');
   btn.textContent = 'ROLLING...';
@@ -1394,6 +1421,44 @@ function splitCSVLine(line) {
   }
   cols.push(cur);
   return cols;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Team counter
+// ─────────────────────────────────────────────────────────────────────────────
+const teamCountInput = document.getElementById('team-count-input');
+
+function loadTeamCount() {
+  const v = parseInt(loadData('soullink_team_count'), 10);
+  return isNaN(v) ? 0 : v;
+}
+
+let teamCount = loadTeamCount();
+teamCountInput.value = teamCount;
+
+teamCountInput.addEventListener('change', () => {
+  const v = parseInt(teamCountInput.value, 10);
+  teamCount = isNaN(v) ? 0 : Math.max(0, v);
+  teamCountInput.value = teamCount;
+  saveData('soullink_team_count', teamCount);
+});
+
+teamCountInput.addEventListener('blur', () => {
+  const v = parseInt(teamCountInput.value, 10);
+  teamCount = isNaN(v) ? 0 : Math.max(0, v);
+  teamCountInput.value = teamCount;
+  saveData('soullink_team_count', teamCount);
+});
+
+function incrementTeamCount() {
+  teamCount++;
+  teamCountInput.value = teamCount;
+  saveData('soullink_team_count', teamCount);
+  // bump animation
+  teamCountInput.classList.remove('bumped');
+  void teamCountInput.offsetWidth;
+  teamCountInput.classList.add('bumped');
+  teamCountInput.addEventListener('animationend', () => teamCountInput.classList.remove('bumped'), { once: true });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
