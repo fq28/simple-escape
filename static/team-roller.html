@@ -1894,26 +1894,14 @@ function buildRuleTextDOM(text, tier, type, entryRule, onRolled) {
         initAudio();
 
         function doTick() {
-          // In the last 2 ticks, occasionally flash the final value for a near-miss feel
-          const remaining = drama.ticks - ticks;
-          const nearEnd = remaining <= 2;
-          const interim = (nearEnd && ticks % 2 === 0)
-            ? finalVal
-            : tickTokenValue(tokenType, resolvedArg);
+          const interim = tickTokenValue(tokenType, resolvedArg);
           chip.textContent = getTokenResultLabel(tokenType, resolvedArg, interim);
-
-          // Exponential slowdown in the last 55% of ticks
-          const slowStart = drama.ticks * 0.45;
-          const delay = ticks < slowStart
-            ? drama.tickMs
-            : drama.tickMs + Math.pow((ticks - slowStart) / (drama.ticks - slowStart), 2.4) * drama.tickMs * 6;
-
-          // Audio: pitch tracks speed — high & fast early, low & slow near the end
-          const speedRatio = drama.tickMs / delay; // 1 = full speed, <1 = slowing
-          const noteFreq = 120 + speedRatio * 380;
-          playNote(noteFreq, 0, 0.055, delay * 0.55, 'triangle', noteFreq * 1.06);
-
+          playNote(180 + ticks * 18, 0, 0.06, 0.08, 'triangle', 280 + ticks * 22);
           ticks++;
+          const remaining = drama.ticks - ticks;
+          const delay = ticks < drama.ticks * 0.6
+            ? drama.tickMs
+            : drama.tickMs + (drama.ticks - ticks) * 12;
 
           if (remaining > 0) {
             setTimeout(doTick, delay);
