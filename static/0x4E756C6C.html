@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0x4E756C6C - paste #7f3a91bc</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d0d;
+    --bg2: #141414;
+    --bg3: #1a1a1a;
+    --border: #2a2a2a;
+    --border2: #333;
+    --green: #00ff88;
+    --green-dim: #00cc6a;
+    --green-dark: #003d22;
+    --red: #ff3c3c;
+    --orange: #ff8c00;
+    --muted: #555;
+    --text: #c8c8c8;
+    --text-dim: #888;
+    --font: 'JetBrains Mono', 'Share Tech Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* top bar */
+  .topbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 38px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .topbar-logo {
+    color: var(--green);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .topbar-nav {
+    display: flex;
+    gap: 20px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .topbar-nav a { color: var(--muted); text-decoration: none; }
+  .topbar-nav a:hover { color: var(--text-dim); }
+  .topbar-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: blink 2s infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* layout */
+  .main { max-width: 900px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  /* warning banner */
+  .warn {
+    border: 1px solid #3a2a00;
+    background: #1c1500;
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .warn-icon { color: var(--orange); flex-shrink: 0; font-size: 13px; margin-top: 1px; }
+  .warn-text { color: #aa7700; font-size: 12px; line-height: 1.5; }
+  .warn-text strong { color: var(--orange); }
+
+  /* paste meta header */
+  .paste-header {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+    padding: 10px 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+  }
+  .paste-title {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    flex: 1;
+  }
+  .meta-pill {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .meta-pill.red { border-color: #4a1a1a; background: #1f0a0a; color: var(--red); }
+  .meta-pill.green { border-color: #004422; background: #001a0e; color: var(--green); }
+
+  /* tabs */
+  .tabs {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-bottom: 1px solid var(--border2);
+    display: flex;
+    gap: 0;
+    padding: 0 14px;
+  }
+  .tab {
+    padding: 7px 14px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+  /* content block */
+  .paste-body {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    overflow: hidden;
+  }
+
+  /* anon message */
+  .anon-msg {
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+  .anon-msg .sender { color: var(--green); font-weight: 700; }
+  .anon-msg .timestamp { color: var(--muted); font-size: 11px; }
+  .anon-msg p + p { margin-top: 6px; }
+
+  /* table section */
+  .table-wrapper { overflow-x: auto; }
+
+  .linenos {
+    display: flex;
+    border-top: 1px solid var(--border);
+  }
+  .code-col { padding: 12px 16px; flex: 1; }
+
+  .db-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 12px;
+  }
+  .db-table thead tr {
+    border-bottom: 1px solid var(--border2);
+  }
+  .db-table th {
+    padding: 6px 16px 6px 0;
+    color: var(--text-dim);
+    font-weight: 400;
+    text-align: left;
+    white-space: nowrap;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .db-table td {
+    padding: 5px 16px 5px 0;
+    color: var(--text);
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  .db-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .db-table td.hash {
+    font-size: 11px;
+    color: var(--green-dim);
+    letter-spacing: 0.03em;
+  }
+  .db-table td.num { color: var(--muted); }
+  .db-table td.admin-row { color: #ff6b6b; }
+  .badge {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 3px;
+    font-size: 10px;
+  }
+  .badge-admin { background: #2d0a0a; color: #ff6b6b; border: 1px solid #5a1a1a; }
+  .badge-sysadmin { background: #2d1500; color: #ff8c00; border: 1px solid #5a3300; }
+  .badge-medewerker { background: #0a1a10; color: #44aa66; border: 1px solid #1a4430; }
+
+  /* comments section */
+  .comments {
+    border-top: 1px solid var(--border);
+    padding: 14px 16px;
+  }
+  .comments-header {
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+  .comment {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .comment-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 3px;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--green);
+    flex-shrink: 0;
+  }
+  .comment-body { flex: 1; }
+  .comment-meta { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+  .comment-meta span { color: var(--text-dim); }
+  .comment-text { font-size: 12px; color: var(--text-dim); }
+  .comment-text .highlight { color: var(--red); }
+  .comment-text .highlight-green { color: var(--green); }
+
+  /* sidebar stats */
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border-top: 1px solid var(--border);
+  }
+  .stat-box {
+    background: var(--bg2);
+    padding: 10px 14px;
+    text-align: center;
+  }
+  .stat-val { font-size: 16px; font-weight: 700; color: var(--green); }
+  .stat-val.red { color: var(--red); }
+  .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+
+  /* raw hash block */
+  .raw-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 12px 14px;
+    margin: 14px 16px;
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 2;
+  }
+  .raw-block .label { color: var(--muted); user-select: none; }
+  .raw-block .hash-val { color: var(--green-dim); }
+
+  /* footer */
+  .footer {
+    margin-top: 40px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 2;
+  }
+  .footer a { color: var(--muted); text-decoration: none; }
+  .footer a:hover { color: var(--text-dim); }
+
+  .strike { text-decoration: line-through; }
+
+  /* glitch effect on title */
+  @keyframes glitch {
+    0%   { clip-path: inset(40% 0 61% 0); transform: translate(-2px, 0); }
+    20%  { clip-path: inset(92% 0 1% 0);  transform: translate(2px, 0); }
+    40%  { clip-path: inset(43% 0 1% 0);  transform: translate(0); }
+    60%  { clip-path: inset(25% 0 58% 0); transform: translate(2px, -1px); }
+    80%  { clip-path: inset(54% 0 7% 0);  transform: translate(-2px, 0); }
+    100% { clip-path: inset(58% 0 43% 0); transform: translate(0); }
+  }
+
+  .glitch-wrapper { position: relative; display: inline-block; }
+  .glitch-wrapper::before,
+  .glitch-wrapper::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    color: inherit;
+    font: inherit;
+    pointer-events: none;
+  }
+  .glitch-wrapper::before {
+    color: var(--red);
+    animation: glitch 3s infinite linear;
+    opacity: 0.5;
+  }
+  .glitch-wrapper::after {
+    color: #00ccff;
+    animation: glitch 3s infinite linear reverse;
+    opacity: 0.4;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">0x4E756C6C<span style="color:#555">/paste</span></div>
+  <div class="topbar-nav">
+    <a href="#">nieuw</a>
+    <a href="#">archief</a>
+    <a href="#">api</a>
+    <a href="#">over</a>
+  </div>
+  <div class="topbar-status">
+    <div class="dot"></div>
+    <span>online</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="warn">
+    <div class="warn-icon">[!]</div>
+    <div class="warn-text">
+      <strong>Inhoud door moderatie gemarkeerd.</strong> Dit paste bevat mogelijk privégegevens of inloggegevens van derden. Bekijk en gebruik op eigen risico. Het hosten van gestolen gegevens is in veel rechtsgebieden illegaal.
+    </div>
+  </div>
+
+  <div class="paste-header">
+    <div class="paste-title">
+      <div class="glitch-wrapper" data-text="Lentecollege_users_DUMP_2025.sql">Lentecollege_users_DUMP_2025.sql</div>
+    </div>
+    <span class="meta-pill red">⚠ verwijderingsverzoek ingediend</span>
+    <span class="meta-pill">Syntaxis: SQL</span>
+    <span class="meta-pill">Grootte: 1.2 KB</span>
+    <span class="meta-pill green">8 rijen</span>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active">raw</div>
+    <div class="tab">gemarkeerd</div>
+    <div class="tab">downloaden</div>
+  </div>
+
+  <div class="paste-body">
+
+    <div class="anon-msg">
+      <div class="timestamp">geplaatst door <span class="sender">anon_7f3a</span> · 3 uur geleden · paste #7f3a91bc</div>
+      <p>Gevonden op een publiek toegankelijke stagingomgeving van Lentecollege in Bloemetjesdorp (vlak bij Boomstad). Geen authenticatie vereist. Database was bereikbaar via poort 3306.</p>
+      <p>Admins gebruiken <span style="color:#ff6b6b">admin</span> als wachtwoord. Geniet ervan.</p>
+    </div>
+
+    <div class="table-wrapper">
+      <div class="linenos">
+        <div class="code-col">
+          <table class="db-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>gebruikersnaam</th>
+                <th>rol</th>
+                <th>wachtwoord_hash</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="num">1</td>
+                <td class="admin-row">admin</td>
+                <td><span class="badge badge-admin">Beheerdersaccount</span></td>
+                <td class="hash">21232f297a57a5a743894a0e4a801fc3</td>
+              </tr>
+              <tr>
+                <td class="num">2</td>
+                <td>sarah.visser</td>
+                <td><span class="badge badge-medewerker">Medewerker</span></td>
+                <td class="hash">e10adc3949ba59abbe56e057f20f883e</td>
+              </tr>
+              <tr>
+                <td class="num">3</td>
+                <td>l.wolters</td>
+                <td><span class="badge badge-medewerker">Medewerker</span></td>
+                <td class="hash">e10adc3949ba59abbe56e057f20f883e</td>
+              </tr>
+              <tr>
+                <td class="num">4</td>
+                <td>thomas.bakker</td>
+                <td><span class="badge badge-medewerker">Medewerker</span></td>
+                <td class="hash">ef6e65efc188e7dffd7335b646a85a21</td>
+              </tr>
+              <tr>
+                <td class="num">5</td>
+                <td>m.dejong</td>
+                <td><span class="badge badge-medewerker">Medewerker</span></td>
+                <td class="hash">9a82b13f539a2ad0cd10fc91038dae5d</td>
+              </tr>
+              <tr>
+                <td class="num">6</td>
+                <td>r.vandenberg</td>
+                <td><span class="badge badge-medewerker">Medewerker</span></td>
+                <td class="hash">161ebd7d45089b3446ee4e0d86dbcf92</td>
+              </tr>
+              <tr>
+                <td class="num">7</td>
+                <td>k.smit</td>
+                <td><span class="badge badge-medewerker">Medewerker</span></td>
+                <td class="hash">39d526e27ee9981fc850c47e5c2ccba5</td>
+              </tr>
+              <tr>
+                <td class="num">8</td>
+                <td>j.administrator</td>
+                <td><span class="badge badge-sysadmin">Systeembeheerder</span></td>
+                <td class="hash">45aa9eae69e7f58169e191ac306ac8e3</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-val red">8</div>
+        <div class="stat-label">accounts gelekt</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val red">2</div>
+        <div class="stat-label">admin-accounts</div>
+      </div>
+    </div>
+
+    <div class="comments">
+      <div class="comments-header">// reacties (4)</div>
+
+      <div class="comment">
+        <div class="comment-avatar">xr</div>
+        <div class="comment-body">
+          <div class="comment-meta"><span>xr00t</span> · 2u geleden</div>
+          <div class="comment-text">rij 2 en 3 hebben <span class="highlight">dezelfde hash</span> lmao. geen salting. klassiek.</div>
+        </div>
+      </div>
+
+      <div class="comment">
+        <div class="comment-avatar">n0</div>
+        <div class="comment-body">
+          <div class="comment-meta"><span>n0_idea</span> · 2u geleden</div>
+          <div class="comment-text">admin:admin nog steeds in 2025. ongelofelijk. <span class="highlight-green">crackstation</span> had dit in 0.3 seconden.</div>
+        </div>
+      </div>
+
+      <div class="comment">
+        <div class="comment-avatar">_d</div>
+        <div class="comment-body">
+          <div class="comment-meta"><span>_darkweb_dan</span> · 1u geleden</div>
+          <div class="comment-text">j.administrator hash kraakt niet via lookup. sterker wachtwoord waarschijnlijk. de rest is <span class="highlight">triviaal</span>.</div>
+        </div>
+      </div>
+
+      <div class="comment">
+        <div class="comment-avatar">??</div>
+        <div class="comment-body">
+          <div class="comment-meta"><span>[verwijderd]</span> · 47m geleden</div>
+          <div class="comment-text" style="font-style:italic; opacity:0.5">[dit bericht is verwijderd door een moderator]</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <p>0x4E756C6C · anoniem · gedecentraliseerd · ongecensureerd</p>
+    <p><a href="#">misbruik melden</a> · <a href="#">pgp-sleutel</a> · <a href="#">tor-spiegel</a></p>
+    <p style="margin-top:8px; color:#333; font-size:10px;">// dit is een nep-website voor educatieve doeleinden</p>
+  </div>
+
+</div>
+
+</body>
+</html>
